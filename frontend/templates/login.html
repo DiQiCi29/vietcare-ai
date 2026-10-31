@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập - VietCare AI | Viettronimex Đà Nẵng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/security.js"></script>
+</head>
+<body class="login-page">
+
+  <div class="login-card">
+    <div class="login-header">
+      <img src="https://vietro.com.vn/uploads/files/Untitled-2-01%20copy.png" alt="Viettronimex" style="height: 48px; object-fit: contain; margin-bottom: 8px;">
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--vietro-navy);">ĐĂNG NHẬP VIETCARE AI</h2>
+      <p style="font-size: 0.85rem; color: var(--gray-600);">Hệ thống Bảo hành Điện tử Viettronimex Đà Nẵng</p>
+    </div>
+
+    <!-- Login Form Body (1 form duy nhất, tự phân quyền) -->
+    <div class="login-body">
+      <!-- Inline Alert Box -->
+      <div id="loginAlert" style="display: none; padding: 10px 14px; margin-bottom: 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;"></div>
+
+      <form onsubmit="handleLoginSubmit(event)">
+        <div class="form-group">
+          <label>Tài khoản (Số điện thoại khách hàng hoặc Tên nhân viên)</label>
+          <input type="text" id="loginIdentity" class="form-control" placeholder="Nhập số điện thoại hoặc tên đăng nhập" autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="Nhập mật khẩu" autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" id="submitLoginBtn" class="btn btn-red" style="width: 100%; padding: 12px; margin-top: 10px; font-size: 0.95rem;">
+          Đăng Nhập Vào Hệ Thống
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    function showAlert(msg, isSuccess = false) {
+      const el = document.getElementById('loginAlert');
+      el.style.display = 'block';
+      el.innerText = msg;
+      if (isSuccess) {
+        el.style.background = 'var(--success-bg)';
+        el.style.color = 'var(--success)';
+        el.style.border = '1px solid #bbf7d0';
+      } else {
+        el.style.background = 'var(--danger-bg)';
+        el.style.color = 'var(--danger)';
+        el.style.border = '1px solid #fecaca';
+      }
+    }
+
+    function hideAlert() {
+      document.getElementById('loginAlert').style.display = 'none';
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const identity = document.getElementById('loginIdentity').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      await executeLogin(identity, password);
+    }
+
+    async function executeLogin(identity, password) {
+      hideAlert();
+      const btn = document.getElementById('submitLoginBtn');
+      btn.innerText = 'Đang xác thực và phân quyền...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username_or_phone: identity, password: password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showAlert(data.detail || 'Tài khoản hoặc mật khẩu không đúng.');
+          btn.innerText = 'Đăng Nhập Vào Hệ Thống';
+          btn.disabled = false;
+          return;
+        }
+
+        showAlert(`Đăng nhập thành công! Chào ${data.name}. Đang chuyển hướng...`, true);
+        localStorage.setItem('vietcare_user', JSON.stringify(data));
+
+        // Tự động phân quyền vào đúng cổng:
+        setTimeout(() => {
+          if (data.user_type === 'customer') {
+            window.location.href = '/customer';
+          } else {
+            // CSKH, KTV, Admin
+            window.location.href = data.role === 'ADMIN' ? '/manager' : '/staff';
+          }
+        }, 350);
+      } catch (err) {
+        showAlert('Lỗi kết nối máy chủ: ' + err.message);
+        btn.innerText = 'Đăng Nhập Vào Hệ Thống';
+        btn.disabled = false;
+      }
+    }
+
+  </script>
+</body>
+</html>

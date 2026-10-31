@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VietCare AI - Quản lý & Hỗ trợ Bảo hành Viettronimex Đà Nẵng</title>
+  <meta name="description" content="Hệ thống tiếp nhận, quản lý bảo hành tập trung tích hợp AI Chatbot cho Viettronimex Đà Nẵng">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/security.js"></script>
+</head>
+<body>
+
+  <!-- 1. Header & Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="/" class="brand-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        <span>VIETCARE AI</span>
+        <span class="brand-badge">VIETTRONIMEX</span>
+      </a>
+
+      <div class="nav-actions">
+        <a href="tel:1800646492" class="hotline-pill">
+          📞 Tổng đài: <strong>1800 64 64 92</strong>
+        </a>
+
+        <!-- Switch between Demo Customer Accounts -->
+        <div class="user-selector" id="customerControls">
+          <span>👤 Khách hàng:</span>
+          <select id="userSelect">
+            <option value="0905123456" selected>0905123456 (Nguyễn Văn An)</option>
+            <option value="0914987654">0914987654 (Trần Thị Bích)</option>
+          </select>
+        </div>
+
+        <!-- Switch between Internal Staff Roles -->
+        <div class="user-selector" id="staffControls" style="display: none;">
+          <span>💼 Nhân sự:</span>
+          <select id="staffRoleSelect">
+            <option value="CSKH" selected>CSKH (Thu Hà)</option>
+            <option value="TECHNICIAN">Kỹ thuật viên (Lê Văn Minh)</option>
+            <option value="ADMIN">Quản trị viên (Admin)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. Portal Switcher Tabs (Customer vs Staff) -->
+  <nav class="view-switch">
+    <div class="switch-container">
+      <div class="switch-tab active" id="switchCustomerView">
+        📱 Cổng Khách Hàng (Website)
+      </div>
+      <div class="switch-tab" id="switchStaffView">
+        💼 Trang Quản Trị Nội Bộ (CSKH / KTV)
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================== -->
+  <!-- 3. CUSTOMER PORTAL VIEW -->
+  <!-- ============================================================== -->
+  <main class="main-content" id="customerPortalSection">
+    <!-- Welcome Banner -->
+    <div class="portal-banner">
+      <div>
+        <h2>Xin chào, <span id="bannerCustomerName">Nguyễn Văn An</span>!</h2>
+        <p>Tra cứu thời hạn bảo hành, nhận hướng dẫn từ AI và đăng ký hỗ trợ kỹ thuật tận nơi chỉ trong 1 phút.</p>
+      </div>
+      <div style="font-size: 0.9rem; opacity: 0.95; background: rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 8px;">
+        SĐT đăng nhập: <strong id="bannerCustomerPhone">0905123456</strong>
+      </div>
+    </div>
+
+    <!-- Customer Navigation Sub-tabs -->
+    <div class="sub-tabs">
+      <button class="btn-tab active" id="tabMyProducts">📦 Sản phẩm của tôi</button>
+      <button class="btn-tab" id="tabMyRequests">📋 Yêu cầu của tôi</button>
+    </div>
+
+    <!-- Section: My Products -->
+    <section id="productsSection">
+      <div class="product-grid" id="productGrid">
+        <!-- Dynamically injected product cards -->
+      </div>
+    </section>
+
+    <!-- Section: My Requests -->
+    <section id="requestsSection" style="display: none;">
+      <div id="customerRequestsList">
+        <!-- Dynamically injected request cards & timelines -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- 4. STAFF & ADMIN PORTAL VIEW -->
+  <!-- ============================================================== -->
+  <main class="main-content" id="staffPortalSection" style="display: none;">
+    <!-- KPI Header Row (QT-06) -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="label">Tổng yêu cầu bảo hành</div>
+        <div class="num" id="kpiTotal">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Tỷ lệ khách dùng Web (KPI phụ)</div>
+        <div class="num" id="kpiWebRatio">0%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Cuộc gọi hỏi tiến độ (KPI lặp)</div>
+        <div class="num" id="kpiRepeatCalls" style="color: var(--accent);">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Đã xử lý hoàn tất</div>
+        <div class="num" id="kpiCompleted" style="color: var(--success);">0</div>
+      </div>
+    </div>
+
+    <!-- Staff Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="searchInput" class="form-control" style="width: 240px;" placeholder="Tìm theo mã, tên, SĐT...">
+        <select id="statusFilter" class="form-control" style="width: 170px;">
+          <option value="ALL">Tất cả trạng thái</option>
+          <option value="Tiếp nhận">Tiếp nhận</option>
+          <option value="Xác minh">Xác minh</option>
+          <option value="Chờ bổ sung">Chờ bổ sung</option>
+          <option value="Phân công">Phân công</option>
+          <option value="Sửa chữa">Sửa chữa</option>
+          <option value="Hoàn tất">Hoàn tất</option>
+          <option value="Từ chối bảo hành">Từ chối bảo hành</option>
+        </select>
+        <select id="channelFilter" class="form-control" style="width: 150px;">
+          <option value="ALL">Tất cả kênh</option>
+          <option value="Web">Kênh Web</option>
+          <option value="Điện thoại">Kênh Điện thoại</option>
+        </select>
+      </div>
+
+      <!-- Button for CSKH Phone Reception -->
+      <button class="btn btn-primary" onclick="openPhoneReceptionModal()">
+        📞 Tiếp nhận qua điện thoại
+      </button>
+    </div>
+
+    <!-- Centralized Request Table (CS-03) -->
+    <table class="staff-table">
+      <thead>
+        <tr>
+          <th>Mã phiếu</th>
+          <th>Khách hàng</th>
+          <th>Sản phẩm</th>
+          <th>Sự cố</th>
+          <th>Trạng thái</th>
+          <th>Kênh</th>
+          <th>Thao tác xử lý</th>
+        </tr>
+      </thead>
+      <tbody id="staffTableBody">
+        <!-- Injected dynamically -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- 5. FLOATING AI CHATBOT (AI-01 -> AI-05) -->
+  <!-- ============================================================== -->
+  <div class="chatbot-bubble" id="chatBubbleTrigger" title="Hỏi trợ lý AI VietCare">
+    💬
+  </div>
+
+  <div class="chat-modal" id="chatModal">
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.2rem;">🤖</span>
+        <div>
+          <h4>VietCare AI Chatbot</h4>
+          <span style="font-size: 0.72rem; opacity: 0.9;">Tư vấn chính sách bảo hành Viettronimex</span>
+        </div>
+      </div>
+      <button id="closeChatBtn" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">✕</button>
+    </div>
+
+    <!-- Dynamic Context Bar (AI-02) -->
+    <div class="chat-context-bar" id="chatContextBar" style="display: none;">
+      <div>
+        Đang hỏi về: <strong id="chatProductName">--</strong>
+      </div>
+      <button onclick="resetChatContext()" style="background: none; border: none; color: #0369a1; text-decoration: underline; cursor: pointer; font-size: 0.75rem;">Hỏi chung</button>
+    </div>
+
+    <!-- Chat Messages Scroll Area -->
+    <div class="chat-body" id="chatBody">
+      <div class="chat-bubble bot">
+        Dạ chào bạn, tôi là trợ lý AI VietCare của Siêu thị Điện máy Viettronimex Đà Nẵng.
+        <br><br>Tôi có thể giúp bạn kiểm tra chính sách bảo hành, hướng dẫn khắc phục sự cố sơ bộ hoặc hỗ trợ đăng ký kiểm tra thiết bị tận nơi!
+      </div>
+    </div>
+
+    <!-- Chat Input Form -->
+    <div class="chat-footer">
+      <input type="text" id="chatInput" placeholder="Nhập câu hỏi (VD: máy lạnh bị chảy nước...)">
+      <button id="sendChatBtn" title="Gửi câu hỏi">➤</button>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- 6. MODALS -->
+  <!-- ============================================================== -->
+
+  <!-- Modal 1: Tạo yêu cầu bảo hành cho khách (KH-03) -->
+  <div class="modal-overlay" id="warrantyModalOverlay">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="color: var(--primary);">Đăng ký yêu cầu bảo hành</h3>
+        <button onclick="closeWarrantyModal()" style="border: none; background: none; font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+
+      <form onsubmit="submitWarrantyForm(event)">
+        <input type="hidden" id="modalSoldItemId">
+
+        <div class="form-group">
+          <label>Sản phẩm cần hỗ trợ</label>
+          <input type="text" id="modalProductName" class="form-control" readonly style="background: var(--gray-100); font-weight: 600;">
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label>Số Serial</label>
+            <input type="text" id="modalSerial" class="form-control" readonly style="background: var(--gray-100);">
+          </div>
+          <div style="flex: 1;">
+            <label>Tình trạng bảo hành</label>
+            <div id="modalWarrantyStatus" class="warranty-status-pill valid" style="margin-top: 6px;">--</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Nhóm sự cố gặp phải</label>
+          <select id="modalErrorGroup" class="form-control" required>
+            <option value="Chảy nước / Rò rỉ">Chảy nước / Rò rỉ nước dàn lạnh</option>
+            <option value="Không lạnh / Kém lạnh">Không mát, kém lạnh, mất gas</option>
+            <option value="Mất nguồn / Không bật được">Mất nguồn, không sáng đèn</option>
+            <option value="Lỗi màn hình / Kẻ sọc">Lỗi sọc màn hình, nhấp nháy, vỡ</option>
+            <option value="Rung lắc / Kêu to">Rung lắc mạnh, kêu to khi hoạt động</option>
+            <option value="Khác">Sự cố kỹ thuật khác</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Mô tả chi tiết triệu chứng hư hỏng</label>
+          <textarea id="modalErrorDesc" class="form-control" rows="3" placeholder="Ví dụ: Máy bật 30 phút thì bắt đầu nhỏ nước ở góc phải, quạt gió vẫn quay bình thường..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Địa chỉ hỗ trợ tận nơi (Đà Nẵng)</label>
+          <input type="text" id="modalSupportAddress" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label>Đính kèm ảnh / video sự cố (Tùy chọn)</label>
+          <input type="file" id="modalAttachment" class="form-control" accept="image/*,video/*">
+          <span style="font-size: 0.78rem; color: var(--gray-500);">Chụp ảnh/video rõ nét vị trí hư hỏng để CSKH xử lý nhanh hơn.</span>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeWarrantyModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">Xác nhận gửi yêu cầu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: CSKH Tiếp nhận qua điện thoại (CS-02) -->
+  <div class="modal-overlay" id="phoneReceptionModal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="color: var(--primary);">📞 Tiếp nhận bảo hành qua điện thoại</h3>
+        <button onclick="closePhoneReceptionModal()" style="border: none; background: none; font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+      <form onsubmit="submitPhoneReception(event)">
+        <div class="form-group">
+          <label>Số điện thoại khách hàng (*)</label>
+          <input type="tel" id="phoneRecPhone" class="form-control" placeholder="Ví dụ: 0905123456" onchange="loadReceptionProducts()" oninput="document.getElementById('phoneRecProduct').replaceChildren(new Option('Nhập SĐT rồi chọn sản phẩm', ''))" required>
+        </div>
+        <div class="form-group">
+          <label>Họ tên khách hàng</label>
+          <input type="text" id="phoneRecName" class="form-control" placeholder="Tên khách hàng">
+        </div>
+        <div class="form-group">
+          <label>Sản phẩm còn hạn bảo hành (*)</label>
+          <select id="phoneRecProduct" class="form-control" required><option value="">Nhập SĐT rồi chọn sản phẩm</option></select>
+        </div>
+        <div class="form-group">
+          <label>Nhóm lỗi</label>
+          <select id="phoneRecError" class="form-control">
+            <option value="Chảy nước / Rò rỉ">Chảy nước dàn lạnh</option>
+            <option value="Không lạnh / Kém lạnh">Không lạnh / Thiếu gas</option>
+            <option value="Mất nguồn">Mất nguồn</option>
+            <option value="Lỗi màn hình">Lỗi màn hình / Kẻ sọc</option>
+            <option value="Rung lắc / Kêu to">Kêu to, rung lắc</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mô tả sự cố khách báo qua cuộc gọi (*)</label>
+          <textarea id="phoneRecDesc" class="form-control" rows="2" required placeholder="Ghi nhận lỗi..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Địa chỉ hỗ trợ tận nơi</label>
+          <input type="text" id="phoneRecAddress" class="form-control" placeholder="Số nhà, đường, quận tại Đà Nẵng">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closePhoneReceptionModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu phiếu vào hệ thống</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: CSKH Phân công kỹ thuật viên (CS-06) -->
+  <div class="modal-overlay" id="assignModal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="color: var(--primary);">Phân công Kỹ thuật viên (<span id="assignRequestCode">--</span>)</h3>
+        <button onclick="closeAssignModal()" style="border: none; background: none; font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+      <form onsubmit="submitAssignForm(event)">
+        <div class="form-group">
+          <label>Chọn Kỹ thuật viên phụ trách (*)</label>
+          <select id="assignTechSelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Lịch hẹn đến kiểm tra tận nơi (*)</label>
+          <input type="date" id="assignAppDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Ghi chú cho kỹ thuật viên</label>
+          <textarea id="assignNote" class="form-control" rows="2" placeholder="Ví dụ: Gọi khách trước 30 phút khi đến..."></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeAssignModal()">Đóng</button>
+          <button type="submit" class="btn btn-primary">Xác nhận phân công & Gửi Email</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: CSKH Xác minh (CS-05) -->
+  <div class="modal-overlay" id="verifyModal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="color: var(--primary);">Xác minh hồ sơ bảo hành (<span id="verifyRequestCode">--</span>)</h3>
+        <button onclick="closeVerifyModal()" style="border: none; background: none; font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú xác minh (Bắt buộc nếu từ chối)</label>
+        <textarea id="verifyNote" class="form-control" rows="3" placeholder="Nhập căn cứ chính sách hoặc yêu cầu bổ sung..."></textarea>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap;">
+        <button type="button" class="btn btn-warning" onclick="submitVerify('NEED_INFO')">Chờ khách bổ sung</button>
+        <button type="button" class="btn btn-danger" style="background: var(--danger); color: white;" onclick="submitVerify('REJECT')">Từ chối bảo hành</button>
+        <button type="button" class="btn btn-primary" onclick="submitVerify('VALID')">Đủ điều kiện (Xác minh xong)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: KTV Hoàn tất sửa chữa (KT-05) -->
+  <div class="modal-overlay" id="completeRepairModal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="color: var(--primary);">Nghiệm thu & Hoàn tất (<span id="completeRequestCode">--</span>)</h3>
+        <button onclick="closeCompleteRepairModal()" style="border: none; background: none; font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+      <form onsubmit="submitCompleteRepair(event)">
+        <div class="form-group">
+          <label>Kết luận bảo hành</label>
+          <select id="completeConclusion" class="form-control">
+            <option value="Được bảo hành">Được bảo hành miễn phí</option>
+            <option value="Từ chối bảo hành">Sửa chữa tính phí (linh kiện)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nội dung xử lý / Sửa chữa (*)</label>
+          <textarea id="completeRepairContent" class="form-control" rows="2" placeholder="Ví dụ: Đã thông tắc ống thoát nước dàn lạnh, vệ sinh máng nước, chạy thử êm..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Linh kiện thay thế (nếu có)</label>
+          <input type="text" id="completeParts" class="form-control" placeholder="Để trống nếu không thay thế linh kiện">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeCompleteRepairModal()">Đóng</button>
+          <button type="submit" class="btn btn-primary" style="background: #16a34a;">Xác nhận hoàn tất ca bảo hành</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- App Script -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+# VietCare AI Application Package

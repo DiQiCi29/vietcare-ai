@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng Khách Hàng - VietCare AI | Viettronimex Đà Nẵng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/security.js"></script>
+</head>
+<body>
+
+  <!-- Top Utility Bar (Phong cách Viettronimex) -->
+  <div class="top-bar">
+    <div class="top-bar-container">
+      <div>
+         Trung tâm CSKH: <strong>460 Nguyễn Hữu Thọ, Q. Cẩm Lệ, TP. Đà Nẵng</strong>
+      </div>
+      <div>
+         Giờ làm việc: <strong>08:00–12:00, 13:00–17:00 (T2–T6)</strong> | Tổng đài miễn phí: <strong>1800 64 64 92</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="main-header">
+    <div class="header-container">
+      <a href="/" class="brand-area">
+        <img src="https://vietro.com.vn/uploads/files/Untitled-2-01%20copy.png" alt="Viettronimex Logo" class="brand-logo-img">
+        <div class="brand-title">
+          <span class="brand-name">VIETTRONIMEX</span>
+          <span class="brand-subtitle">Cổng Bảo Hành & CSKH Điện Tử</span>
+        </div>
+      </a>
+
+      <div class="header-right">
+<!-- User Profile & Logout -->
+        <div class="user-badge" id="userProfileBadge">
+          <span style="font-size: 1.1rem;"></span>
+          <div>
+            <div style="font-weight: 700; color: var(--vietro-navy);" id="headerCustomerName">Khách hàng</div>
+            <div style="font-size: 0.75rem; color: var(--gray-600);" id="headerCustomerPhone">0905123456</div>
+          </div>
+          <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content Tabs & Views -->
+  <main class="content-wrapper customer-content">
+    <section id="requestSuccess" class="request-success" role="status" aria-live="polite" hidden></section>
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tabBtnProducts" onclick="switchCustomerTab('products')">
+         Sản phẩm của tôi
+      </button>
+      <button class="tab-btn" id="tabBtnRequests" onclick="switchCustomerTab('requests')">
+         Yêu cầu bảo hành của tôi
+      </button>
+      <button class="tab-btn" id="tabBtnContact" onclick="switchCustomerTab('contact')">
+         Yêu cầu hỗ trợ
+      </button>
+    </div>
+
+    <!-- Section 1: My Products (KH-02) -->
+    <section id="sectionProducts">
+      <div class="product-grid" id="productGrid">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </section>
+
+    <!-- Section 2: My Requests (KH-06) -->
+    <section id="sectionRequests" style="display: none;">
+      <div id="requestsListContainer">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </section>
+
+    <!-- Section 3: Contact & Support (Liên hệ hỗ trợ) -->
+    <section id="sectionContact" style="display: none;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
+        <!-- Hotline & Trung tâm bảo hành -->
+        <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);">
+          <h3 style="color: var(--vietro-navy); margin-bottom: 14px; font-size: 1.15rem;">
+             Kênh Hỗ Trợ Trực Tiếp
+          </h3>
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 0.85rem; color: var(--gray-600);">Tổng đài tiếp nhận bảo hành (Miễn cước):</div>
+            <a href="tel:1800646492" style="font-size: 1.4rem; font-weight: 800; color: var(--vietro-red); text-decoration: none;">
+              1800 64 64 92
+            </a>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 0.85rem; color: var(--gray-600);">Đường dây nóng CSKH & Góp ý khiếu nại:</div>
+            <a href="tel:02363823801" style="font-size: 1.15rem; font-weight: 700; color: var(--vietro-navy); text-decoration: none;">
+              02363 823 801 - 0903 575 662
+            </a>
+          </div>
+
+          <div style="border-top: 1px dashed var(--gray-200); padding-top: 14px; margin-top: 14px;">
+            <div style="font-weight: 700; color: var(--gray-800); margin-bottom: 6px;">
+               Trung Tâm Dịch Vụ & Bảo Hành Tại Đà Nẵng:
+            </div>
+            <p style="font-size: 0.88rem; color: var(--gray-700); margin-bottom: 8px;">
+              • <strong>Trụ sở chính:</strong> 460 Nguyễn Hữu Thọ, P. Khuê Trung, Q. Cẩm Lệ, TP. Đà Nẵng
+            </p>
+            <p style="font-size: 0.88rem; color: var(--gray-700);">
+              • <strong>Siêu thị Hải Châu:</strong> 06 Pasteur, P. Hải Châu 1, Q. Hải Châu, TP. Đà Nẵng
+            </p>
+          </div>
+        </div>
+
+        <!-- Form gửi phản ánh / yêu cầu gọi lại -->
+        <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);">
+          <h3 style="color: var(--vietro-navy); margin-bottom: 14px; font-size: 1.15rem;">
+             Yêu cầu hỗ trợ
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 16px;">
+            Chọn sản phẩm còn hạn bảo hành và mô tả nội dung cần hỗ trợ. CSKH sẽ tiếp nhận và liên hệ với bạn.
+          </p>
+
+          <form onsubmit="handleContactSubmit(event)">
+            <div class="form-group">
+              <label>Họ và tên quý khách</label>
+              <input type="text" id="contactName" class="form-control" placeholder="Nguyễn Văn An" required>
+            </div>
+            <div class="form-group">
+              <label>Số điện thoại liên hệ (*)</label>
+              <input type="tel" id="contactPhone" class="form-control" placeholder="0905123456" required>
+            </div>
+            <div class="form-group">
+              <label>Sản phẩm còn hạn cần hỗ trợ (*)</label>
+              <select id="contactSoldItem" class="form-control" required>
+                <option value="">Chọn sản phẩm còn hạn bảo hành</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Nội dung cần hỗ trợ hoặc phản ánh (*)</label>
+              <textarea id="contactMessage" class="form-control" rows="3" placeholder="Ví dụ: Cần kiểm tra lại lịch hẹn của kỹ thuật viên máy lạnh..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-red" style="width: 100%; padding: 12px;">
+              Gửi Yêu Cầu Cho CSKH
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating AI Chatbot Button (AI-01) -->
+  <button type="button" class="chat-toggle-btn" id="chatBubble" onclick="toggleChatWindow()" title="Hỏi Trợ lý AI VietCare">Chat</button>
+
+  <!-- AI Chatbot Window (AI-01 to AI-05) -->
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.3rem;"></span>
+        <div>
+          <h3>VietCare AI Chatbot</h3>
+          <span style="font-size: 0.72rem; opacity: 0.9;">Tư vấn chính sách bảo hành Viettronimex</span>
+        </div>
+      </div>
+      <button onclick="toggleChatWindow()" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">&times;</button>
+    </div>
+
+    <!-- Active Product Context Bar (AI-02) -->
+    <div class="chat-product-bar" id="chatProductBar" style="display: none;">
+      <div>
+        Đang hỏi về: <strong id="chatProductName">--</strong>
+      </div>
+      <button onclick="clearChatContext()" style="background: none; border: none; color: var(--vietro-red); font-size: 0.75rem; text-decoration: underline; cursor: pointer;">Hỏi chung</button>
+    </div>
+
+    <!-- Messages Container -->
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg-bubble bot">
+        Dạ chào bạn, tôi là trợ lý AI VietCare của Siêu thị Điện máy Viettronimex Đà Nẵng.
+        <br><br>Tôi có thể tư vấn cho sản phẩm còn hạn bảo hành và tra cứu tiến độ phiếu của bạn.
+        <br><button class="btn btn-outline-navy" onclick="askMyRequests()">Xem phiếu của tôi</button>
+      </div>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="chat-input-bar">
+      <input type="text" id="chatInputBox" placeholder="Nhập câu hỏi (VD: máy lạnh bị chảy nước...)" onkeypress="if(event.key === 'Enter') sendCustomerChat()">
+      <button onclick="sendCustomerChat()" title="Gửi câu hỏi">Gửi</button>
+    </div>
+  </div>
+
+  <!-- Modal: Đăng ký yêu cầu bảo hành (KH-03) -->
+  <div class="modal-backdrop" id="warrantyModalBackdrop">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="color: var(--vietro-navy);">Đăng ký yêu cầu bảo hành tận nơi</h3>
+        <button type="button" aria-label="Đóng" onclick="closeWarrantyModal()" class="detail-close">&times;</button>
+      </div>
+
+      <form onsubmit="handleCustomerRequestSubmit(event)">
+        <input type="hidden" id="formSoldItemId">
+
+        <div class="form-group">
+          <label>Thiết bị cần bảo hành</label>
+          <input type="text" id="formProductName" class="form-control" readonly style="background: var(--gray-100); font-weight: 700;">
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label>Số Serial máy</label>
+            <input type="text" id="formSerial" class="form-control" readonly style="background: var(--gray-100);">
+          </div>
+          <div style="flex: 1;">
+            <label>Thời hạn bảo hành</label>
+            <div id="formWarrantyBadge" class="warranty-badge valid" style="margin-top: 5px;">Còn hạn</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Nhóm sự cố gặp phải (*)</label>
+          <select id="formErrorGroup" class="form-control" required>
+            <option value="Chảy nước dàn lạnh">Chảy nước / Rò rỉ nước dàn lạnh</option>
+            <option value="Không lạnh / Kém lạnh">Không lạnh, kém mát, mất gas</option>
+            <option value="Mất nguồn">Mất nguồn, không lên điện</option>
+            <option value="Kẻ sọc màn hình">Kẻ sọc màn hình, nhấp nháy, tối đen</option>
+            <option value="Kêu to / Rung lắc">Kêu to, rung lắc bất thường khi chạy</option>
+            <option value="Sự cố kỹ thuật khác">Sự cố kỹ thuật khác</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Mô tả chi tiết hiện tượng hư hỏng (*)</label>
+          <textarea id="formErrorDesc" class="form-control" rows="3" placeholder="Mô tả cụ thể để kỹ thuật viên chuẩn bị sẵn linh kiện phù hợp..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Địa chỉ hỗ trợ tận nơi (Đà Nẵng) (*)</label>
+          <input type="text" id="formAddress" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="incidentFiles">Ảnh/video sự cố (không bắt buộc)</label>
+          <input type="file" id="incidentFiles" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime,.mov" multiple onchange="previewIncidentFiles(this, 'incidentPreview')" aria-describedby="incidentFileHelp">
+          <p id="incidentFileHelp" class="upload-help">Tối đa 5 tệp; mỗi tệp 25 MB, tổng 50 MB. Nhận JPG, PNG, GIF, WebP, MP4, WebM, MOV. Bạn có thể chọn ảnh/video từ điện thoại.</p>
+          <div id="incidentPreview" class="media-preview" aria-live="polite"></div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn btn-outline-navy" onclick="closeWarrantyModal()">Hủy</button>
+          <button type="submit" class="btn btn-red">Gửi yêu cầu bảo hành</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Customer Portal Script -->
+  <script>
+    // Strict Authentication Guard
+    const rawCustomer = localStorage.getItem('vietcare_user');
+    let userSession = null;
+    try {
+      userSession = JSON.parse(rawCustomer);
+    } catch(e) {}
+
+    if (!userSession?.access_token || userSession.user_type !== 'customer') {
+      window.location.href = '/login';
+    }
+
+    const currentCustomer = {
+      phone: userSession ? userSession.phone_or_email : '',
+      name: userSession ? userSession.name : ''
+    };
+
+    let customerProducts = [];
+    let activeChatProduct = null;
+    let chatHistory = [];
+    let chatSessionId = crypto.randomUUID();
+    let activeRequestId = null;
+    let chatSending = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!userSession) return;
+      document.getElementById('headerCustomerName').innerText = currentCustomer.name;
+      document.getElementById('headerCustomerPhone').innerText = currentCustomer.phone;
+      loadProducts();
+    });
+
+    function logout() {
+      localStorage.removeItem('vietcare_user');
+      window.location.href = '/login';
+    }
+
+    function switchCustomerTab(tab) {
+      const prodBtn = document.getElementById('tabBtnProducts');
+      const reqBtn = document.getElementById('tabBtnRequests');
+      const contactBtn = document.getElementById('tabBtnContact');
+      const prodSec = document.getElementById('sectionProducts');
+      const reqSec = document.getElementById('sectionRequests');
+      const contactSec = document.getElementById('sectionContact');
+
+      prodBtn.classList.remove('active');
+      reqBtn.classList.remove('active');
+      contactBtn.classList.remove('active');
+      prodSec.style.display = 'none';
+      reqSec.style.display = 'none';
+      contactSec.style.display = 'none';
+
+      if (tab === 'products') {
+        prodBtn.classList.add('active');
+        prodSec.style.display = 'block';
+      } else if (tab === 'requests') {
+        reqBtn.classList.add('active');
+        reqSec.style.display = 'block';
+        loadRequests();
+      } else if (tab === 'contact') {
+        contactBtn.classList.add('active');
+        contactSec.style.display = 'block';
+        document.getElementById('contactName').value = currentCustomer.name;
+        document.getElementById('contactPhone').value = currentCustomer.phone;
+      }
+    }
+
+    async function handleContactSubmit(e) {
+      e.preventDefault();
+      const submitButton = e.target.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      const name = document.getElementById('contactName').value.trim();
+      const phone = document.getElementById('contactPhone').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+
+      try {
+        const res = await apiFetch('/api/v1/customer/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, message, sold_item_id: Number(document.getElementById('contactSoldItem').value) })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showRequestSuccess(data);
+          loadProducts();
+          document.getElementById('contactMessage').value = '';
+          switchCustomerTab('requests');
+        } else {
+          alert(data.detail || 'Không thể gửi yêu cầu.');
+        }
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    async function loadProducts() {
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray-600);">Đang tải danh sách thiết bị...</p>';
+      
+      try {
+        const res = await apiFetch(`/api/v1/customer/products/${currentCustomer.phone}`);
+        customerProducts = await res.json();
+        const contactSelect = document.getElementById('contactSoldItem');
+        contactSelect.replaceChildren(new Option('Chọn sản phẩm còn hạn bảo hành', ''));
+        customerProducts.filter(p => !p.is_expired).forEach(p => {
+          contactSelect.add(new Option(`${productDisplayName(p.product_name, p.model)} (${p.model})`, p.id));
+        });
+
+        if (customerProducts.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray-600);">Chưa có sản phẩm nào được liên kết với số điện thoại này.</p>';
+          return;
+        }
+
+        grid.innerHTML = '';
+        customerProducts.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          if (p.is_expired) {
+            card.innerHTML = `<div class="product-img-box"><img src="${safeImageUrl(p.image_url || 'https://vietro.com.vn/uploads/files/Untitled-2-01%20copy.png')}" alt="${escapeHtml(productDisplayName(p.product_name, p.model))}"></div><div class="product-title">${escapeHtml(productDisplayName(p.product_name, p.model))}</div><div class="warranty-badge expired">Đã hết bảo hành</div>`;
+            grid.appendChild(card);
+            return;
+          }
+
+          const badge = p.is_expired
+            ? `<div class="warranty-badge expired"> Hết hạn (${escapeHtml(p.warranty_expire_date)})</div>`
+            : `<div class="warranty-badge valid"> Còn hạn đến ${escapeHtml(p.warranty_expire_date)}</div>`;
+
+          let actionBtn = '';
+          if (p.active_request_id) {
+            actionBtn = `<button class="btn btn-warning-light" onclick="switchCustomerTab('requests')">Theo dõi trạng thái</button>`;
+          } else {
+            actionBtn = `<button class="btn btn-red" onclick="openWarrantyModal(${Number(p.id)})">Yêu cầu bảo hành</button>`;
+          }
+
+          card.innerHTML = `
+            <div class="product-img-box">
+              <img src="${safeImageUrl(p.image_url || 'https://vietro.com.vn/uploads/files/Untitled-2-01%20copy.png')}" alt="${escapeHtml(productDisplayName(p.product_name, p.model))}">
+            </div>
+            <div class="product-title" title="${escapeHtml(productDisplayName(p.product_name, p.model))}">${escapeHtml(productDisplayName(p.product_name, p.model))}</div>
+            <div class="product-code">Model: <strong>${escapeHtml(p.model)}</strong></div>
+            ${badge}
+            <div class="product-actions">
+              <button class="btn btn-outline-navy" onclick="openChatForProduct(${Number(p.id)})"> Hỏi Chatbot</button>
+              ${actionBtn}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (err) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; color: var(--danger); text-align: center;">Lỗi tải sản phẩm: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    async function loadRequests() {
+      const container = document.getElementById('requestsListContainer');
+      container.innerHTML = '<p style="text-align: center; padding: 30px; color: var(--gray-600);">Đang tải danh sách yêu cầu...</p>';
+
+      try {
+        const res = await apiFetch(`/api/v1/customer/requests/${currentCustomer.phone}`);
+        const requests = await res.json();
+
+        if (requests.length === 0) {
+          container.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--gray-600);">Bạn chưa có yêu cầu bảo hành nào.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        requests.forEach(r => {
+          const card = document.createElement('div');
+          card.className = 'req-item-card';
+
+          let timelineHtml = '';
+          r.timeline.forEach(t => {
+            timelineHtml += `
+              <div class="timeline-step">
+                <div class="timeline-dot"></div>
+                <div class="timeline-text">${escapeHtml(statusDisplayName(t.status))} <span class="timeline-time">${escapeHtml(t.time)}</span></div>
+                <div class="timeline-desc">${escapeHtml(t.note || 'Cập nhật từ hệ thống CSKH')}</div>
+              </div>
+            `;
+          });
+
+          card.innerHTML = `
+            <div class="req-header">
+              <div>
+                <span class="req-code">Mã yêu cầu: ${escapeHtml(r.request_code)}</span>
+                <div style="font-weight: 700; font-size: 1.05rem; margin-top: 3px;">${escapeHtml(productDisplayName(r.product_name, r.model))}</div>
+                <div style="font-size: 0.8rem; color: var(--gray-600);">Kênh gửi: <strong>${escapeHtml(r.channel)}</strong> | Ngày tiếp nhận: ${escapeHtml(r.created_at)}</div>
+              </div>
+              <span class="status-pill ${getStatusPillClass(r.status)}">${escapeHtml(statusDisplayName(r.status))}</span>
+            </div>
+            <div class="request-detail-columns"><div class="request-summary">
+              <div><strong>Hiện tượng sự cố:</strong> ${escapeHtml(r.error_group)} - <em>${escapeHtml(r.error_description)}</em></div>
+              <div style="margin-top: 4px; color: var(--vietro-navy);"><strong>Kỹ thuật viên phụ trách:</strong> ${escapeHtml(r.technician_name)} ${r.appointment_date ? `(Lịch hẹn: ${escapeHtml(r.appointment_date)})` : ''}</div>
+            </div>
+            <div class="request-progress"><h4>Lịch sử xử lý</h4>
+            <div class="timeline-box">
+              ${timelineHtml}
+            </div></div></div>
+            <button class="btn btn-outline-navy" onclick="openChatForRequest(${Number(r.id)})">Hỏi tiến độ phiếu qua chat</button>
+            <button class="btn btn-outline-navy" onclick="showRequestDetail(${Number(r.id)})">Chi tiết / Ảnh video (${Number(r.attachments?.length || 0)})</button>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        container.innerHTML = `<p style="color: var(--danger); text-align: center;">Lỗi tải yêu cầu: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    // Modal Handling
+    function openWarrantyModal(soldItemId) {
+      const p = customerProducts.find(item => item.id === soldItemId);
+      if (!p) return;
+      if (p.is_expired) {
+        alert('Sản phẩm đã hết hạn bảo hành, không thể tạo phiếu mới.');
+        return;
+      }
+
+      document.getElementById('formSoldItemId').value = p.id;
+      document.getElementById('incidentFiles').value = '';
+      previewIncidentFiles(document.getElementById('incidentFiles'), 'incidentPreview');
+      document.getElementById('formProductName').value = `${productDisplayName(p.product_name, p.model)} (${p.model})`;
+      document.getElementById('formSerial').value = p.serial_number;
+      document.getElementById('formWarrantyBadge').innerText = p.is_expired ? 'Hết hạn bảo hành' : 'Còn hạn bảo hành';
+      document.getElementById('formWarrantyBadge').className = p.is_expired ? 'warranty-badge expired' : 'warranty-badge valid';
+      document.getElementById('formAddress').value = '120 Nguyễn Văn Linh, Q. Hải Châu, TP. Đà Nẵng';
+      document.getElementById('warrantyModalBackdrop').classList.add('open');
+    }
+
+    function closeWarrantyModal() {
+      document.getElementById('warrantyModalBackdrop').classList.remove('open');
+    }
+
+    async function handleCustomerRequestSubmit(e) {
+      e.preventDefault();
+      const submitButton = e.target.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      const soldItemId = parseInt(document.getElementById('formSoldItemId').value);
+      const errorGroup = document.getElementById('formErrorGroup').value;
+      const desc = document.getElementById('formErrorDesc').value.trim();
+      const addr = document.getElementById('formAddress').value.trim();
+
+      const payload = {
+        sold_item_id: soldItemId,
+        customer_phone: currentCustomer.phone,
+        error_group: errorGroup,
+        error_description: desc,
+        support_address: addr,
+        channel: 'Web'
+      };
+
+      try {
+        const files = [...document.getElementById('incidentFiles').files];
+        const formData = new FormData();
+        formData.append('payload', JSON.stringify(payload));
+        files.forEach(file => formData.append('files', file));
+        const res = await apiFetch(files.length ? '/api/v1/customer/requests-with-media' : '/api/v1/customer/requests', {
+          method: 'POST',
+          headers: files.length ? {} : { 'Content-Type': 'application/json' },
+          body: files.length ? formData : JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || 'Không thể gửi yêu cầu.');
+          return;
+        }
+
+        closeWarrantyModal();
+        document.getElementById('incidentFiles').value = '';
+        previewIncidentFiles(document.getElementById('incidentFiles'), 'incidentPreview');
+        showRequestSuccess(data);
+        loadProducts();
+        switchCustomerTab('requests');
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    function showRequestSuccess(data) {
+      const panel = document.getElementById('requestSuccess');
+      panel.hidden = false;
+      panel.innerHTML = `<div class="success-mark" aria-hidden="true">&check;</div>
+        <h2>Gửi yêu cầu thành công!</h2>
+        <p>Yêu cầu của bạn đã được tiếp nhận.</p>
+        <dl><div><dt>Mã yêu cầu</dt><dd>${escapeHtml(data.request_code)}</dd></div>
+        <div><dt>Trạng thái</dt><dd><span class="status-pill tiepnhan">Đã tiếp nhận</span></dd></div></dl>
+        <p class="success-help">Bạn có thể theo dõi cập nhật trong Yêu cầu bảo hành của tôi.</p>
+        <button type="button" class="btn btn-red" onclick="document.getElementById('requestSuccess').hidden = true; switchCustomerTab('requests')">Theo dõi trạng thái</button>
+        <button type="button" class="success-close" aria-label="Đóng thông báo" onclick="document.getElementById('requestSuccess').hidden = true">&times;</button>`;
+      panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    // Chatbot Functions
+    function toggleChatWindow() {
+      document.getElementById('chatWindow').classList.toggle('active');
+    }
+
+    function openChatForProduct(soldItemId) {
+      const p = customerProducts.find(item => item.id === soldItemId);
+      if (!p) return;
+      if (p.is_expired) {
+        alert('Sản phẩm đã hết bảo hành.');
+        return;
+      }
+
+      activeChatProduct = p;
+      activeRequestId = null;
+      chatSessionId = crypto.randomUUID();
+      chatHistory = []; // Reset history for new product context
+      document.getElementById('chatProductBar').style.display = 'flex';
+      document.getElementById('chatProductName').innerText = `${productDisplayName(p.product_name, p.model)} (${p.model})`;
+      
+      const chatWin = document.getElementById('chatWindow');
+      if (!chatWin.classList.contains('active')) {
+        chatWin.classList.add('active');
+      }
+
+      document.getElementById('chatMessages').innerHTML = `
+        <div class="msg-bubble bot">
+          Dạ chào bạn, tôi là trợ lý AI VietCare. Tôi đang hỗ trợ bảo hành cho thiết bị <strong>${escapeHtml(productDisplayName(p.product_name, p.model))}</strong> (Model: <code>${escapeHtml(p.model)}</code>).
+          <br><br>Thiết bị của bạn đang gặp vấn đề gì ạ?
+        </div>
+      `;
+    }
+
+    function clearChatContext() {
+      activeChatProduct = null;
+      activeRequestId = null;
+      chatSessionId = crypto.randomUUID();
+      chatHistory = []; // Reset history
+      document.getElementById('chatProductBar').style.display = 'none';
+      document.getElementById('chatMessages').innerHTML = `
+        <div class="msg-bubble bot">
+          Bạn có thể chọn sản phẩm còn hạn để hỏi về bảo hành, hoặc hỏi “Phiếu của tôi đến đâu rồi?”.
+          <br><button class="btn btn-outline-navy" onclick="askMyRequests()">Xem phiếu của tôi</button>
+        </div>
+      `;
+    }
+
+    function openChatForRequest(requestId) {
+      clearChatContext();
+      activeRequestId = requestId;
+      document.getElementById('chatWindow').classList.add('active');
+      document.getElementById('chatInputBox').value = 'Cho tôi xem tiến độ phiếu bảo hành này';
+      sendCustomerChat();
+    }
+
+    function askMyRequests() {
+      clearChatContext();
+      document.getElementById('chatWindow').classList.add('active');
+      document.getElementById('chatInputBox').value = 'Cho tôi xem tất cả phiếu bảo hành của tôi';
+      sendCustomerChat();
+    }
+
+    async function sendCustomerChat() {
+      const input = document.getElementById('chatInputBox');
+      const text = input.value.trim();
+      if (!text || chatSending) return;
+      if (activeChatProduct?.is_expired) {
+        alert('Sản phẩm đã hết hạn bảo hành, không hỗ trợ chat tư vấn.');
+        return;
+      }
+      chatSending = true;
+      const sentSession = chatSessionId;
+
+      input.value = '';
+      const box = document.getElementById('chatMessages');
+
+      box.innerHTML += `<div class="msg-bubble user">${escapeHtml(text)}</div>`;
+      box.scrollTop = box.scrollHeight;
+
+      // Track user turn in history
+      chatHistory.push({ sender: 'user', message: text });
+
+      const typingId = 'typing_' + Date.now();
+      box.innerHTML += `<div id="${typingId}" class="msg-bubble bot" style="color: var(--gray-600); font-style: italic;">VietCare AI đang phân tích và tra cứu quy định bảo hành...</div>`;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const payload = {
+          query: text,
+          sold_item_id: activeChatProduct ? activeChatProduct.id : null,
+          session_id: chatSessionId,
+          request_id: activeRequestId
+        };
+
+        const res = await apiFetch('/api/v1/customer/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (sentSession !== chatSessionId) return;
+
+        document.getElementById(typingId)?.remove();
+
+        // Track bot turn in history
+        chatHistory.push({ sender: 'bot', message: data.reply });
+
+        const formattedReply = formatMarkdown(data.reply);
+        let botReply = `<div class="msg-bubble bot">${formattedReply}`;
+
+        const suggestedProductId = data.sold_item_id || activeChatProduct?.id;
+        if (data.suggested_action === 'CREATE_WARRANTY_REQUEST' && suggestedProductId) {
+          botReply += `
+            <div class="suggest-box">
+              <span class="suggest-box-title"> Yêu cầu kiểm tra thiết bị</span>
+              <button class="btn btn-red" onclick="openWarrantyModal(${Number(suggestedProductId)})">Tạo phiếu bảo hành</button>
+            </div>
+          `;
+        }
+        if (data.suggested_action === 'VIEW_WARRANTY_REQUESTS') {
+          botReply += `<div class="suggest-box"><button class="btn btn-outline-navy" onclick="switchCustomerTab('requests')">Xem yêu cầu của tôi</button></div>`;
+        }
+        botReply += `</div>`;
+
+        box.innerHTML += botReply;
+        box.scrollTop = box.scrollHeight;
+      } catch (err) {
+        if (sentSession !== chatSessionId) return;
+        document.getElementById(typingId)?.remove();
+        box.innerHTML += `<div class="msg-bubble bot" style="color: var(--danger);">${escapeHtml(err.message || 'Không thể kết nối trợ lý AI lúc này.')}</div>`;
+      } finally {
+        chatSending = false;
+      }
+    }
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      let html = escapeHtml(text)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code style="background:#f1f5f9; padding:2px 5px; border-radius:4px; font-size:0.85rem;">$1</code>');
+
+      html = html.replace(/^\s*-\s+(.*)$/gm, '<li style="margin-left: 16px; margin-bottom: 4px;">$1</li>');
+      html = html.replace(/(⚠️.*?)(?=(\n|$))/g, '<div style="background:#fffbeb; border-left:3px solid #f59e0b; padding:8px 10px; border-radius:4px; margin-top:8px; font-size:0.82rem; color:#92400e;"><strong>$1</strong></div>');
+      html = html.replace(/\n\n/g, '<div style="height: 6px;"></div>').replace(/\n/g, '<br>');
+      return html;
+    }
+
+    function getStatusPillClass(status) {
+      switch (status) {
+        case 'Tiếp nhận': return 'tiepnhan';
+        case 'Xác minh': return 'xacminh';
+        case 'Chờ bổ sung': return 'chobosung';
+        case 'Phân công': return 'phancong';
+        case 'Sửa chữa': return 'suachua';
+        case 'Hoàn tất': return 'hoantat';
+        default: return 'tuchoi';
+      }
+    }
+  </script>
+</body>
+</html>

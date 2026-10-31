@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng Điều Phối & Kỹ Thuật Viên - VietCare AI | Viettronimex Đà Nẵng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/security.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="header-container">
+      <div class="brand-area">
+        <img src="https://vietro.com.vn/uploads/files/Untitled-2-01%20copy.png" alt="Viettronimex" class="brand-logo-img">
+        <div class="brand-title">
+          <span class="brand-name">VIETTRONIMEX PORTAL</span>
+          <span class="brand-subtitle" id="portalSubTitle">Trang Điều Phối & Quản Trị Bảo Hành</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Staff Authenticated User Badge (KHÔNG có dropdown chuyển vai trò tuỳ tiện) -->
+        <div class="user-badge" style="background: white; border: 1px solid var(--gray-300);">
+          <span style="font-size: 1.1rem;" id="userIcon"></span>
+          <div>
+            <div style="font-weight: 700; color: var(--vietro-navy); font-size: 0.9rem;" id="staffName">Đang tải...</div>
+            <div class="staff-role" id="staffRole">NHÂN VIÊN</div>
+          </div>
+          <button class="btn-logout" onclick="logoutStaff()">Đăng xuất</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Staff Content -->
+  <main class="content-wrapper staff-content" style="margin-top: 24px;">
+
+    <section id="managerIntro" class="manager-intro" hidden>
+      <div><h1>Tổng quan bảo hành</h1><p>Giám sát tiếp nhận, tiến độ và phân công kỹ thuật viên.</p></div>
+      <button type="button" class="btn btn-outline-navy" onclick="refreshStaffPage()">Cập nhật số liệu</button>
+    </section>
+
+    <div class="kpi-grid" id="cskhKpiGrid" aria-label="Thống kê yêu cầu">
+      <button class="kpi-tile active" data-view="all" onclick="filterByKpi('all')"><span class="title">Tổng yêu cầu</span><span class="val" id="kpiTotal">0</span></button>
+      <button class="kpi-tile" data-view="waiting" onclick="filterByKpi('waiting')"><span class="title">Chờ xử lý</span><span class="val" id="kpiWaiting">0</span></button>
+      <button class="kpi-tile overdue-tile" data-view="overdue" onclick="filterByKpi('overdue')"><span class="title">Quá hạn xử lý</span><span class="val" id="kpiOverdue">0</span></button>
+      <button class="kpi-tile" data-view="completed" onclick="filterByKpi('completed')"><span class="title">Đã hoàn tất</span><span class="val" id="kpiCompleted">0</span></button>
+    </div>
+
+    <p id="slaExplanation" class="sla-explanation">Quá hạn: phiếu vẫn ở bước tiếp nhận sau 4 giờ làm việc. Giờ làm việc: 08:00–12:00, 13:00–17:00, thứ Hai–thứ Sáu; không loại trừ ngày lễ.</p>
+
+    <section id="managerOverview" class="manager-overview" hidden>
+      <div class="overview-panel"><h2>Tiến độ toàn bộ phiếu</h2><div id="managerStatusList" class="status-summary"></div></div>
+      <div class="overview-panel"><h2>Công việc kỹ thuật viên</h2><p class="upload-help">Bấm tên để xem các ca của kỹ thuật viên và điều phối lại khi cần.</p><div class="table-box"><table class="workload-table"><thead><tr><th>Kỹ thuật viên</th><th>Chờ nhận</th><th>Đang sửa</th><th>Hoàn tất</th></tr></thead><tbody id="managerWorkload"></tbody></table></div></div>
+    </section>
+    <div class="kpi-grid" id="techKpiGrid" style="display: none;" aria-label="Thống kê công việc">
+      <button class="kpi-tile active" data-view="all" onclick="filterByKpi('all')"><span class="title">Tổng ca được giao</span><span class="val" id="techKpiTotal">0</span></button>
+      <button class="kpi-tile" data-view="waiting" onclick="filterByKpi('waiting')"><span class="title">Chờ xác nhận / Đang xử lý</span><span class="val" id="techKpiPending">0</span></button>
+      <button class="kpi-tile" data-view="completed" onclick="filterByKpi('completed')"><span class="title">Đã hoàn tất</span><span class="val" id="techKpiCompleted">0</span></button>
+    </div>
+
+    <!-- Actions & Filter Bar -->
+    <div class="staff-filter-bar">
+      <div class="staff-filter-fields">
+        <input type="text" id="staffSearch" class="form-control" placeholder="Tìm theo mã, tên, SĐT..." oninput="loadStaffData()">
+        
+        <select id="staffStatusFilter" class="form-control" onchange="loadStaffData()">
+          <option value="ALL">Tất cả trạng thái</option>
+          <option value="Tiếp nhận">Đã tiếp nhận</option>
+          <option value="Xác minh">Xác minh</option>
+          <option value="Chờ bổ sung">Chờ bổ sung</option>
+          <option value="Phân công">Phân công</option>
+          <option value="Sửa chữa">Sửa chữa</option>
+          <option value="Hoàn tất">Hoàn tất</option>
+          <option value="Từ chối bảo hành">Từ chối bảo hành</option>
+        </select>
+
+        <select id="staffChannelFilter" class="form-control" onchange="loadStaffData()">
+          <option value="ALL">Tất cả kênh</option>
+          <option value="Web">Kênh Web</option>
+          <option value="Điện thoại">Kênh Điện thoại</option>
+        </select>
+        <select id="managerTechnicianFilter" class="form-control" hidden aria-label="Lọc kỹ thuật viên" onchange="loadStaffData()"><option value="">Tất cả kỹ thuật viên</option></select>
+      </div>
+
+      <div class="appointment-filters">
+        <label>Từ ngày hẹn <input type="date" id="appointmentFrom" class="form-control" onchange="loadStaffData()"></label>
+        <label>Đến ngày hẹn <input type="date" id="appointmentTo" class="form-control" onchange="loadStaffData()"></label>
+        <button type="button" class="btn btn-outline-navy" onclick="resetStaffFilters()">Xóa bộ lọc</button>
+      </div>
+      <!-- CSKH Phone Reception Button (CS-02) -->
+      <button class="btn btn-red" id="btnPhoneReception" onclick="openPhoneModal()">
+         Tạo yêu cầu thay khách
+      </button>
+    </div>
+
+    <!-- Centralized Management Table -->
+    <div id="staffActionNotice" role="status" style="display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 8px; background: #ecfdf5; color: #166534;"></div>
+    <p id="staffFilterSummary" class="filter-summary" role="status"></p>
+    <section id="newAssignments" class="new-assignments" hidden aria-labelledby="newAssignmentsTitle">
+      <h2 id="newAssignmentsTitle">Ca mới chờ xác nhận</h2>
+      <div id="newAssignmentCards" class="assignment-grid"></div>
+    </section>
+    <div class="table-box">
+      <table class="data-table">
+        <thead id="staffTableHead">
+          <tr>
+            <th>Mã phiếu</th>
+            <th>Khách hàng</th>
+            <th>Thiết bị / Model</th>
+            <th>Mô tả sự cố</th>
+            <th>Địa chỉ hỗ trợ</th>
+            <th>Lịch hẹn</th>
+            <th>Trạng thái</th>
+            <th style="min-width: 140px;">Thao tác xử lý</th>
+          </tr>
+        </thead>
+        <tbody id="staffTableBody">
+          <!-- Injected dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal 1: Tiếp nhận cuộc gọi (CS-02) -->
+  <div class="modal-backdrop" id="phoneModalBackdrop" onclick="if(event.target === this) closePhoneModal()">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="color: var(--vietro-navy);"> Tạo yêu cầu thay khách gọi điện</h3>
+        <button type="button" onclick="closePhoneModal()" style="border: none; background: none; font-size: 1.4rem; cursor: pointer; color: var(--gray-600);">&times;</button>
+      </div>
+
+      <form onsubmit="handlePhoneSubmit(event)">
+        <div class="form-group">
+          <label>Số điện thoại khách hàng (*)</label>
+          <input type="tel" id="pPhone" class="form-control" placeholder="0905123456" onchange="loadPhoneProducts()" oninput="document.getElementById('pProduct').replaceChildren(new Option('Nhập SĐT rồi chọn sản phẩm', ''))" required>
+        </div>
+        <div class="form-group">
+          <label>Họ tên khách hàng</label>
+          <input type="text" id="pName" class="form-control" placeholder="Tên khách hàng">
+        </div>
+        <div class="form-group">
+          <label>Sản phẩm đã mua còn hạn bảo hành (*)</label>
+          <select id="pProduct" class="form-control" required><option value="">Nhập SĐT rồi chọn sản phẩm</option></select>
+        </div>
+        <div class="form-group">
+          <label>Nhóm lỗi</label>
+          <select id="pError" class="form-control">
+            <option value="Chảy nước dàn lạnh">Chảy nước dàn lạnh</option>
+            <option value="Không lạnh / Kém lạnh">Không lạnh / Thiếu gas</option>
+            <option value="Mất nguồn">Mất nguồn</option>
+            <option value="Lỗi màn hình">Lỗi màn hình / Kẻ sọc</option>
+            <option value="Rung lắc / Kêu to">Rung lắc / Kêu to</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mô tả hư hỏng qua cuộc gọi (*)</label>
+          <textarea id="pDesc" class="form-control" rows="2" placeholder="Ghi nhận lỗi từ cuộc gọi..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Địa chỉ hỗ trợ tận nơi (*)</label>
+          <input type="text" id="pAddress" class="form-control" placeholder="Địa chỉ tại Đà Nẵng" required>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+          <button type="button" class="btn btn-outline-navy" onclick="closePhoneModal()">Hủy</button>
+          <button type="submit" id="btnPhoneSubmit" class="btn btn-red">Lưu phiếu vào hệ thống</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: CSKH Phân công KTV (CS-06) -->
+  <div class="modal-backdrop" id="assignModalBackdrop" onclick="if(event.target === this) closeAssignModal()">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="color: var(--vietro-navy);"><span id="assignModalTitle">Phân công kỹ thuật viên</span> (<span id="assignReqCode">--</span>)</h3>
+        <button type="button" onclick="closeAssignModal()" style="border: none; background: none; font-size: 1.4rem; cursor: pointer; color: var(--gray-600);">&times;</button>
+      </div>
+      <form onsubmit="handleAssignSubmit(event)">
+        <div class="form-group">
+          <label>Chọn Kỹ thuật viên phụ trách (*)</label>
+          <select id="techSelect" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Lịch hẹn đến tận nơi (*)</label>
+          <input type="date" id="appDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Ghi chú cho kỹ thuật viên</label>
+          <textarea id="assignNotes" class="form-control" rows="2" placeholder="Ví dụ: Khách dặn đến sau 14h..."></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+          <button type="button" class="btn btn-outline-navy" onclick="closeAssignModal()">Đóng</button>
+          <button type="submit" id="btnAssignSubmit" class="btn btn-red">Xác nhận phân công</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: CSKH Xác minh (CS-05) -->
+  <div class="modal-backdrop" id="verifyModalBackdrop" onclick="if(event.target === this) closeVerifyModal()">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="color: var(--vietro-navy);">Xác minh hồ sơ bảo hành (<span id="verifyReqCode">--</span>)</h3>
+        <button type="button" onclick="closeVerifyModal()" style="border: none; background: none; font-size: 1.4rem; cursor: pointer; color: var(--gray-600);">&times;</button>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú xác minh (Bắt buộc nếu từ chối)</label>
+        <textarea id="verifyNotes" class="form-control" rows="3" placeholder="Nhập căn cứ theo chính sách..."></textarea>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap;">
+        <button type="button" id="btnVerifyNeedInfo" class="btn btn-warning-light" onclick="submitVerification('NEED_INFO', this)">Chờ khách bổ sung</button>
+        <button type="button" id="btnVerifyReject" class="btn" style="background: var(--danger); color: white;" onclick="submitVerification('REJECT', this)">Từ chối bảo hành</button>
+        <button type="button" id="btnVerifyValid" class="btn btn-red" onclick="submitVerification('VALID', this)">Đủ điều kiện (Xác minh xong)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: KTV Hoàn tất sửa chữa (KT-05) -->
+  <div class="modal-backdrop" id="completeModalBackdrop" onclick="if(event.target === this) closeCompleteModal()">
+    <div class="modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="color: var(--vietro-navy);">Báo hoàn thành (<span id="completeReqCode">--</span>)</h3>
+        <button type="button" onclick="closeCompleteModal()" style="border: none; background: none; font-size: 1.4rem; cursor: pointer; color: var(--gray-600);">&times;</button>
+      </div>
+      <form onsubmit="handleCompleteSubmit(event)">
+        <div class="form-group">
+          <label>Kết luận bảo hành</label>
+          <select id="completeConclusion" class="form-control">
+            <option value="Được bảo hành">Được bảo hành miễn phí</option>
+            <option value="Từ chối bảo hành">Sửa chữa tính phí (linh kiện)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nội dung công việc sửa chữa (*)</label>
+          <textarea id="repairContent" class="form-control" rows="2" placeholder="Ví dụ: Đã thông tắc đường ống nước thải, vệ sinh máng nước, máy chạy êm mát..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Linh kiện thay thế (nếu có)</label>
+          <input type="text" id="partsReplaced" class="form-control" placeholder="Để trống nếu không thay thế linh kiện">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+          <button type="button" class="btn btn-outline-navy" onclick="closeCompleteModal()">Đóng</button>
+          <button type="submit" id="btnCompleteSubmit" class="btn btn-red" style="background: var(--success);">Báo hoàn thành</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <script>
+    // Strict Auth Guard - KHÔNG tự tạo session giả
+    const rawUser = localStorage.getItem('vietcare_user');
+    let staffSession = null;
+    try {
+      staffSession = JSON.parse(rawUser);
+    } catch(e) {}
+
+    if (!staffSession?.access_token || staffSession.user_type !== 'staff') {
+      window.location.href = '/login';
+    }
+    if (location.pathname === '/manager' && staffSession?.role !== 'ADMIN') window.location.href = '/staff';
+
+    let technicians = [];
+    let kpiView = 'all';
+    let staffLoadVersion = 0;
+    let staffRequestRows = [];
+    let currentAssignId = null;
+    let currentVerifyId = null;
+    let currentCompleteId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!staffSession) return;
+      setupRoleUI();
+      loadStaffData();
+      if (staffSession.role === 'TECHNICIAN') {
+        loadTechPersonalKPI();
+      } else {
+        loadKPIs();
+        loadTechs();
+      }
+      setInterval(refreshStaffPage, 60000);
+    });
+
+    function setupRoleUI() {
+      if (!staffSession) return;
+      const isTech = staffSession.role === 'TECHNICIAN';
+      const isAdmin = staffSession.role === 'ADMIN';
+      document.getElementById('staffName').innerText = staffSession.name;
+      document.getElementById('staffRole').innerText = isTech ? 'Kỹ thuật viên' : (staffSession.role === 'ADMIN' ? 'Quản trị viên' : 'CSKH');
+      document.getElementById('portalSubTitle').innerText = isTech ? 'Công việc bảo hành' : 'Quản lý bảo hành';
+      if (isAdmin) document.getElementById('portalSubTitle').innerText = 'Trưởng phòng bảo hành';
+      document.getElementById('managerIntro').hidden = !isAdmin;
+      document.getElementById('managerOverview').hidden = !isAdmin;
+      document.getElementById('managerTechnicianFilter').hidden = !isAdmin;
+      document.getElementById('slaExplanation').hidden = isTech;
+      document.getElementById('btnPhoneReception').hidden = isTech;
+      document.getElementById('cskhKpiGrid').style.display = isTech ? 'none' : 'grid';
+      document.getElementById('techKpiGrid').style.display = isTech ? 'grid' : 'none';
+      document.getElementById('staffChannelFilter').hidden = isTech;
+      if (isTech) {
+        const assigned = document.querySelector('#staffStatusFilter option[value="Phân công"]');
+        assigned.textContent = 'Chờ xác nhận';
+      }
+    }
+
+    function filterByKpi(view, refresh = true) {
+      kpiView = view;
+      document.getElementById('staffStatusFilter').value = view === 'completed' ? 'Hoàn tất' : 'ALL';
+      document.getElementById('staffChannelFilter').value = 'ALL';
+      document.getElementById('staffSearch').value = '';
+      document.getElementById('appointmentFrom').value = '';
+      document.getElementById('appointmentTo').value = '';
+      document.getElementById('managerTechnicianFilter').value = '';
+      document.querySelectorAll('.kpi-tile').forEach(tile => {
+        tile.classList.toggle('active', tile.dataset.view === view);
+        tile.setAttribute('aria-pressed', String(tile.dataset.view === view));
+      });
+      if (refresh) loadStaffData();
+    }
+
+    function resetStaffFilters() { filterByKpi('all'); }
+
+    function filterByStatus(status) {
+      filterByKpi('all', false);
+      document.getElementById('staffStatusFilter').value = status;
+      loadStaffData();
+    }
+
+    function filterTechnician(id) {
+      filterByKpi('all', false);
+      document.getElementById('managerTechnicianFilter').value = String(id);
+      loadStaffData();
+    }
+
+    function refreshStaffPage() {
+      loadStaffData();
+      if (staffSession.role === 'TECHNICIAN') loadTechPersonalKPI();
+      else loadKPIs();
+    }
+
+    function renderManagerOverview(data) {
+      const list = document.getElementById('managerStatusList');
+      list.replaceChildren();
+      (data.statuses || []).forEach(row => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'status-summary-button';
+        button.textContent = `${statusDisplayName(row.status)} (${row.count})`;
+        button.onclick = () => filterByStatus(row.status);
+        list.append(button);
+      });
+      if (!list.children.length) list.textContent = 'Chưa có yêu cầu.';
+      document.getElementById('managerWorkload').innerHTML = (data.technicians || []).map(t => `<tr><td><button class="text-button" onclick="filterTechnician(${Number(t.id)})">${escapeHtml(t.name)}</button></td><td>${Number(t.assigned)}</td><td>${Number(t.in_progress)}</td><td>${Number(t.completed)}</td></tr>`).join('') || '<tr><td colspan="4">Chưa có kỹ thuật viên.</td></tr>';
+    }
+
+    function logoutStaff() {
+      localStorage.removeItem('vietcare_user');
+      window.location.href = '/login';
+    }
+
+    async function loadKPIs() {
+      try {
+        const isAdmin = staffSession.role === 'ADMIN';
+        const res = await apiFetch(isAdmin ? '/api/v1/admin/overview' : '/api/v1/staff/kpi');
+        const response = await res.json();
+        const data = isAdmin ? response.kpi : response;
+        if (isAdmin) renderManagerOverview(response);
+        document.getElementById('kpiTotal').innerText = data.total_requests;
+        document.getElementById('kpiWaiting').innerText = data.waiting_count;
+        document.getElementById('kpiOverdue').innerText = data.overdue_count;
+        document.getElementById('kpiCompleted').innerText = data.completed_count;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadTechPersonalKPI() {
+      try {
+        const res = await apiFetch(`/api/v1/staff/requests?technician_id=${staffSession.user_id}`);
+        const data = await res.json();
+        const total = data.length;
+        const completed = data.filter(r => r.status === 'Hoàn tất').length;
+        const pending = data.filter(r => ['Phân công', 'Sửa chữa'].includes(r.status)).length;
+
+        document.getElementById('techKpiTotal').innerText = total;
+        document.getElementById('techKpiPending').innerText = pending;
+        document.getElementById('techKpiCompleted').innerText = completed;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadTechs() {
+      try {
+        const res = await apiFetch('/api/v1/staff/technicians');
+        technicians = await res.json();
+        const sel = document.getElementById('techSelect');
+        sel.innerHTML = technicians.map(t => `<option value="${Number(t.id)}">${escapeHtml(t.name)} (${escapeHtml(t.phone || 'KTV')})</option>`).join('');
+        const filter = document.getElementById('managerTechnicianFilter');
+        const previous = filter.value;
+        filter.replaceChildren(new Option('Tất cả kỹ thuật viên', ''));
+        technicians.forEach(t => filter.add(new Option(t.name, t.id)));
+        filter.value = previous;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadStaffData() {
+      const version = ++staffLoadVersion;
+      const isTech = staffSession.role === 'TECHNICIAN';
+      const status = document.getElementById('staffStatusFilter').value;
+      const params = new URLSearchParams({
+        status_filter: status,
+        channel_filter: document.getElementById('staffChannelFilter').value,
+        search: document.getElementById('staffSearch').value.trim()
+      });
+      const from = document.getElementById('appointmentFrom').value;
+      const to = document.getElementById('appointmentTo').value;
+      if (from) params.set('appointment_from', from);
+      if (to) params.set('appointment_to', to);
+      if (kpiView === 'waiting' && !isTech) params.set('pending_only', 'true');
+      if (kpiView === 'overdue' && !isTech) params.set('overdue_only', 'true');
+      const technicianFilter = document.getElementById('managerTechnicianFilter').value;
+      if (staffSession.role === 'ADMIN' && technicianFilter) params.set('technician_id', technicianFilter);
+      const tbody = document.getElementById('staffTableBody');
+      document.getElementById('newAssignments').hidden = true;
+      tbody.innerHTML = '<tr><td colspan="8" class="table-empty">Đang tải dữ liệu...</td></tr>';
+      try {
+        const response = await apiFetch(`/api/v1/staff/requests?${params}`);
+        let data = await response.json();
+        if (version !== staffLoadVersion) return;
+        if (isTech && kpiView === 'waiting') data = data.filter(r => ['Phân công', 'Sửa chữa'].includes(r.status));
+        staffRequestRows = data;
+        const fresh = isTech ? data.filter(r => r.status === 'Phân công') : [];
+        document.getElementById('newAssignments').hidden = fresh.length === 0;
+        document.getElementById('newAssignmentCards').innerHTML = fresh.map(r => `
+          <article class="assignment-card">
+            <div class="assignment-heading"><strong>${escapeHtml(r.request_code)}</strong><span class="status-pill phancong">Chờ xác nhận</span></div>
+            <h3>${escapeHtml(productDisplayName(r.product_name, r.model))}</h3>
+            <p class="assignment-meta">${escapeHtml(r.model)} · ${escapeHtml(r.customer_name)}</p>
+            <dl><div><dt>Lịch hẹn</dt><dd>${escapeHtml(r.appointment_date || 'Chưa có lịch hẹn')}</dd></div>
+              <div><dt>Địa chỉ</dt><dd>${escapeHtml(r.support_address)}</dd></div>
+              <div><dt>Sự cố</dt><dd>${escapeHtml(r.error_group)} — ${escapeHtml(r.error_description)}</dd></div></dl>
+            <div class="assignment-actions">
+              <button class="btn btn-outline-navy" onclick="showRequestDetail(${Number(r.id)})">Chi tiết / Ảnh video</button>
+              <button class="btn btn-red" onclick="quickStatus(${Number(r.id)}, 'Sửa chữa', 'KTV nhận việc và tiến hành kiểm tra tận nơi')">Nhận việc</button>
+              <button class="btn btn-outline-navy" onclick="declineAssignment(${Number(r.id)})">Từ chối</button>
+            </div>
+          </article>`).join('');
+        const rows = isTech ? data.filter(r => r.status !== 'Phân công') : data;
+        const viewLabels = {all: 'Danh sách yêu cầu', waiting: isTech ? 'Chờ xác nhận / Đang xử lý' : 'Chờ xử lý', overdue: 'Quá hạn xử lý', completed: 'Đã hoàn tất'};
+        document.getElementById('staffFilterSummary').textContent = `${viewLabels[kpiView]}: ${data.length} phiếu${fresh.length ? `, ${fresh.length} ca chờ xác nhận phía trên` : ''}.`;
+        if (!rows.length) {
+          tbody.innerHTML = `<tr><td colspan="8" class="table-empty">${fresh.length ? 'Ca mới chờ bạn xác nhận ở phía trên.' : 'Không có yêu cầu phù hợp.'}</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = rows.map(r => {
+          let actions = '';
+          const detailAction = `<button class="btn btn-outline-navy" onclick="showRequestDetail(${Number(r.id)})">Chi tiết / Ảnh video (${Number(r.attachment_count || 0)})</button>`;
+          if (isTech) {
+            if (r.status === 'Sửa chữa') actions = `<button class="btn btn-red" data-request-code="${escapeHtml(r.request_code)}" onclick="openCompleteModal(${Number(r.id)}, this.dataset.requestCode)">Báo hoàn thành</button>`;
+          } else {
+            if (['Tiếp nhận', 'Chờ bổ sung'].includes(r.status)) actions += `<button class="btn btn-outline-navy" data-request-code="${escapeHtml(r.request_code)}" onclick="openVerifyModal(${Number(r.id)}, this.dataset.requestCode)">Xác minh</button>`;
+            if (['Xác minh', 'Phân công'].includes(r.status)) {
+              const label = r.status === 'Xác minh' ? 'Phân công KTV' : (r.technician_id ? 'Đổi KTV / lịch hẹn' : 'Phân công lại KTV');
+              actions += `<button class="btn btn-red" data-request-code="${escapeHtml(r.request_code)}" onclick="openAssignModal(${Number(r.id)}, this.dataset.requestCode)">${label}</button>`;
+            }
+          }
+          const label = !isTech && r.status === 'Phân công' ? (r.technician_id ? 'Chờ KTV nhận việc' : 'Chờ phân công lại') : statusDisplayName(r.status, isTech);
+          const technician = !isTech && r.technician_id ? `<div class="cell-secondary">${escapeHtml(r.technician_name)}</div>` : '';
+          return `<tr>
+            <td class="request-code-cell"><strong>${escapeHtml(r.request_code)}</strong></td>
+            <td><strong>${escapeHtml(r.customer_name)}</strong><br><a href="tel:${escapeHtml(r.customer_phone)}">${escapeHtml(r.customer_phone)}</a></td>
+            <td class="device-cell"><strong>${escapeHtml(productDisplayName(r.product_name, r.model))}</strong><div class="cell-secondary">${escapeHtml(r.model || '')}</div></td>
+            <td class="issue-cell"><strong>${escapeHtml(r.error_group)}</strong><div class="cell-secondary">${escapeHtml(r.error_description)}</div></td>
+            <td class="address-cell">${escapeHtml(r.support_address || 'Chưa có địa chỉ')}</td>
+            <td class="appointment-cell">${escapeHtml(r.appointment_date || 'Chưa hẹn')}</td>
+            <td><span class="status-pill ${getStatusPillClass(r.status)}">${escapeHtml(label)}</span>${r.is_overdue ? '<div class="overdue-badge">Quá hạn xử lý</div>' : ''}${r.status === 'Tiếp nhận' ? `<div class="cell-secondary">Hạn: ${escapeHtml(formatLocalTime(r.response_due_at))}</div>` : ''}${technician}</td>
+            <td><div class="row-actions">${detailAction}${actions}</div></td>
+          </tr>`;
+        }).join('');
+      } catch (error) {
+        if (version !== staffLoadVersion) return;
+        document.getElementById('staffFilterSummary').textContent = '';
+        tbody.innerHTML = `<tr><td colspan="8" class="table-empty error-text">${escapeHtml(error.message)}</td></tr>`;
+      }
+    }
+
+    function declineAssignment(id) {
+      const reason = prompt('Lý do từ chối nhận việc:');
+      if (reason?.trim()) quickStatus(id, 'Phân công', `KTV từ chối nhận việc: ${reason.trim()}`);
+    }
+
+    async function quickStatus(id, newStatus, note) {
+      try {
+        const res = await apiFetch(`/api/v1/staff/requests/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_status: newStatus, notes: note })
+        });
+        if (res.ok) {
+          alert(`Đã cập nhật ca máy: ${newStatus}`);
+          loadStaffData();
+          if (staffSession.role === 'TECHNICIAN') {
+            loadTechPersonalKPI();
+          } else {
+            loadKPIs();
+          }
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    // Modal Helpers
+    function openPhoneModal() { document.getElementById('phoneModalBackdrop').classList.add('open'); }
+    function closePhoneModal() { document.getElementById('phoneModalBackdrop').classList.remove('open'); }
+
+    async function loadPhoneProducts() {
+      const phone = document.getElementById('pPhone').value.trim();
+      const select = document.getElementById('pProduct');
+      select.replaceChildren(new Option('Chọn sản phẩm còn hạn bảo hành', ''));
+      if (!phone) return;
+      try {
+        const response = await apiFetch(`/api/v1/customer/products/${encodeURIComponent(phone)}`);
+        const products = await response.json();
+        if (phone !== document.getElementById('pPhone').value.trim()) return;
+        products.filter(p => !p.is_expired).forEach(p => select.add(new Option(`${p.product_name} (${p.model})`, p.id)));
+        if (select.options.length === 1) select.options[0].text = 'Khách chưa có sản phẩm còn hạn bảo hành';
+      } catch (error) {
+        if (phone !== document.getElementById('pPhone').value.trim()) return;
+        select.options[0].text = error.message;
+      }
+    }
+
+    async function handlePhoneSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        customer_phone: document.getElementById('pPhone').value.trim(),
+        customer_name: document.getElementById('pName').value.trim(),
+        sold_item_id: Number(document.getElementById('pProduct').value),
+        error_group: document.getElementById('pError').value,
+        error_description: document.getElementById('pDesc').value.trim(),
+        support_address: document.getElementById('pAddress').value.trim(),
+        channel: 'Điện thoại'
+      };
+
+      try {
+        const res = await apiFetch('/api/v1/customer/requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`Đã tạo phiếu bảo hành cuộc gọi thành công! Mã: ${data.request_code}`);
+          closePhoneModal();
+          await loadStaffData();
+          await loadKPIs();
+        } else {
+          alert(data.detail || 'Lỗi tạo phiếu');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    let staffActionNoticeTimer;
+
+    function openAssignModal(id, code) {
+      currentAssignId = id;
+      const request = staffRequestRows.find(row => row.id === id);
+      const changing = request?.status === 'Phân công' && Boolean(request.technician_id);
+      document.getElementById('assignModalTitle').innerText = changing ? 'Đổi kỹ thuật viên / lịch hẹn' : 'Phân công kỹ thuật viên';
+      document.getElementById('btnAssignSubmit').innerText = changing ? 'Lưu thay đổi' : 'Xác nhận phân công';
+      document.getElementById('assignReqCode').innerText = code || '#' + id;
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const defaultDate = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+      document.getElementById('appDate').value = request?.appointment_date ? request.appointment_date.split('/').reverse().join('-') : defaultDate;
+      if (request?.technician_id) document.getElementById('techSelect').value = String(request.technician_id);
+      document.getElementById('assignNotes').value = '';
+      document.getElementById('assignModalBackdrop').classList.add('open');
+    }
+    function closeAssignModal() { document.getElementById('assignModalBackdrop').classList.remove('open'); }
+
+    async function handleAssignSubmit(e) {
+      e.preventDefault();
+      const techId = parseInt(document.getElementById('techSelect').value);
+      const appDate = document.getElementById('appDate').value;
+      const notes = document.getElementById('assignNotes').value;
+      const button = document.getElementById('btnAssignSubmit');
+      const buttonLabel = button.innerText;
+      button.disabled = true;
+      button.innerText = 'Đang lưu...';
+
+      try {
+        const res = await apiFetch(`/api/v1/staff/requests/${currentAssignId}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ technician_id: techId, appointment_date: appDate, notes: notes })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          closeAssignModal();
+          await loadStaffData();
+          await loadKPIs();
+          const technician = technicians.find(row => row.id === techId);
+          const notice = document.getElementById('staffActionNotice');
+          notice.innerText = `Đã lưu phân công cho phiếu ${document.getElementById('assignReqCode').innerText}: ${technician?.name || 'kỹ thuật viên đã chọn'}, lịch hẹn ${appDate.split('-').reverse().join('/')}. Đang chờ kỹ thuật viên nhận việc.`;
+          notice.style.display = 'block';
+          clearTimeout(staffActionNoticeTimer);
+          staffActionNoticeTimer = setTimeout(() => {
+            notice.style.display = 'none';
+            notice.textContent = '';
+          }, 5000);
+        } else {
+          alert(data.detail || 'Lỗi phân công');
+        }
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        button.disabled = false;
+        button.innerText = buttonLabel;
+      }
+    }
+
+    function openVerifyModal(id, code) {
+      currentVerifyId = id;
+      document.getElementById('verifyReqCode').innerText = code || '#' + id;
+      document.getElementById('verifyNotes').value = '';
+      document.getElementById('verifyModalBackdrop').classList.add('open');
+    }
+    function closeVerifyModal() { document.getElementById('verifyModalBackdrop').classList.remove('open'); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeVerifyModal();
+        closeAssignModal();
+        closeCompleteModal();
+        closePhoneModal();
+      }
+    });
+
+    async function submitVerification(action, btnEl) {
+      const notes = document.getElementById('verifyNotes').value.trim();
+      if (action === 'REJECT' && !notes) {
+        alert('Vui lòng nhập lý do từ chối theo chính sách bảo hành.');
+        return;
+      }
+
+      const origText = btnEl ? btnEl.innerText : '';
+      if (btnEl) {
+        btnEl.innerText = 'Đang xử lý...';
+        btnEl.disabled = true;
+      }
+
+      try {
+        const res = await apiFetch(`/api/v1/staff/requests/${currentVerifyId}/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: action, notes: notes || 'Hồ sơ hợp lệ theo quy định hãng' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`Đã cập nhật kết quả xác minh: ${data.status}`);
+          closeVerifyModal();
+          loadStaffData();
+          loadKPIs();
+        } else {
+          alert(data.detail || 'Lỗi xác minh');
+        }
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        if (btnEl) {
+          btnEl.innerText = origText;
+          btnEl.disabled = false;
+        }
+      }
+    }
+
+    function openCompleteModal(id, code) {
+      currentCompleteId = id;
+      document.getElementById('completeReqCode').innerText = code || '#' + id;
+      document.getElementById('repairContent').value = '';
+      document.getElementById('partsReplaced').value = '';
+      document.getElementById('completeModalBackdrop').classList.add('open');
+    }
+    function closeCompleteModal() { document.getElementById('completeModalBackdrop').classList.remove('open'); }
+
+    async function handleCompleteSubmit(e) {
+      e.preventDefault();
+      const conclusion = document.getElementById('completeConclusion').value;
+      const content = document.getElementById('repairContent').value.trim();
+      const parts = document.getElementById('partsReplaced').value.trim();
+
+      try {
+        const res = await apiFetch(`/api/v1/staff/requests/${currentCompleteId}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conclusion: conclusion,
+            repair_content: content,
+            parts_replaced: parts,
+            labor_fee: 0,
+            parts_fee: parts ? 150000 : 0
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Đã ghi nhận hoàn thành ca bảo hành. Khách có thể theo dõi kết quả trong tài khoản.');
+          closeCompleteModal();
+          loadStaffData();
+          if (staffSession.role === 'TECHNICIAN') {
+            loadTechPersonalKPI();
+          } else {
+            loadKPIs();
+          }
+        } else {
+          alert(data.detail || 'Lỗi hoàn tất');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function getStatusPillClass(status) {
+      switch (status) {
+        case 'Tiếp nhận': return 'tiepnhan';
+        case 'Xác minh': return 'xacminh';
+        case 'Chờ bổ sung': return 'chobosung';
+        case 'Phân công': return 'phancong';
+        case 'Sửa chữa': return 'suachua';
+        case 'Hoàn tất': return 'hoantat';
+        case 'Từ chối bảo hành': return 'tuchoi';
+        default: return 'tiepnhan';
+      }
+    }
+  </script>
+</body>
+</html>

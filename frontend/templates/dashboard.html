@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Siêu Thị Điện Máy Viettronimex Đà Nẵng - Trung Tâm Bảo Hành VietCare AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .catalog-tabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 24px;
+    }
+    .catalog-tab {
+      background: white;
+      border: 1px solid var(--gray-300);
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--gray-700);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .catalog-tab:hover {
+      border-color: var(--vietro-red);
+      color: var(--vietro-red);
+    }
+    .catalog-tab.active {
+      background: var(--vietro-red);
+      color: white;
+      border-color: var(--vietro-red);
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 22px;
+      margin-bottom: 40px;
+    }
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--vietro-red);
+    }
+    .product-card-img {
+      width: 100%;
+      height: 200px;
+      object-fit: contain;
+      background: #fafafa;
+      padding: 16px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .product-card-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .product-card-brand {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--vietro-red);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .product-card-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--vietro-navy);
+      margin-bottom: 6px;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .product-card-model {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-bottom: 14px;
+    }
+    .product-card-meta {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px dashed var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+    }
+    .warranty-tag {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .process-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .process-card .step-num {
+      width: 36px;
+      height: 36px;
+      background: var(--vietro-red);
+      color: white;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+  </style>
+  <script src="/static/js/security.js"></script>
+</head>
+<body>
+
+  <!-- Top Bar: Thông tin trung tâm -->
+  <div class="top-bar">
+    <div class="top-bar-container">
+      <div>
+        🏢 Hệ Thống Siêu Thị Điện Máy Viettronimex: <strong>460 Nguyễn Hữu Thọ & 06 Pasteur, TP. Đà Nẵng</strong>
+      </div>
+      <div>
+        ⭐ Cam kết 100% hàng chính hãng - Dịch vụ hậu mãi & bảo hành uy tín số 1 Đà Nẵng
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="main-header">
+    <div class="header-container">
+      <a href="/" class="brand-area">
+        <img src="https://vietro.com.vn/uploads/files/Untitled-2-01%20copy.png" alt="Viettronimex" class="brand-logo-img">
+        <div class="brand-title">
+          <span class="brand-name">VIETTRONIMEX</span>
+          <span class="brand-subtitle">Hệ Thống Phân Phối & Bảo Hành VietCare AI</span>
+        </div>
+      </a>
+
+      <div class="header-right">
+        <div id="authArea">
+          <a href="/login" class="btn btn-red" style="padding: 10px 22px; font-weight: 700; text-decoration: none;">
+            🔐 Đăng Nhập
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Banner: Giới thiệu Viettronimex & VietCare AI -->
+  <div style="background: linear-gradient(135deg, #002244 0%, #003e7e 100%); color: white; padding: 48px 20px; text-align: center;">
+    <div style="max-width: 960px; margin: 0 auto;">
+      <div style="display: inline-block; background: rgba(225, 27, 34, 0.2); border: 1px solid rgba(225, 27, 34, 0.5); color: #ff8589; font-weight: 800; font-size: 0.8rem; padding: 4px 14px; border-radius: 20px; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px;">
+        ĐIỆN MÁY VIETTRONIMEX ĐÀ NẴNG
+      </div>
+      <h1 style="font-size: 2.3rem; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.5px; line-height: 1.25;">
+        SIÊU THỊ ĐIỆN MÁY CHÍNH HÃNG & DỊCH VỤ BẢO HÀNH CHUYÊN NGHIỆP
+      </h1>
+      <p style="font-size: 1.05rem; opacity: 0.9; max-width: 780px; margin: 0 auto; line-height: 1.6;">
+        Hơn 30 năm đồng hành cùng người tiêu dùng Đà Nẵng và miền Trung. Phân phối chính hãng các thương hiệu hàng đầu thế giới: Daikin, Panasonic, Samsung, LG, Toshiba, Electrolux... Tích hợp công nghệ bảo hành điện tử thông minh VietCare AI.
+      </p>
+    </div>
+  </div>
+
+  <main class="content-wrapper">
+    <!-- Showcase Sản phẩm chính hãng -->
+    <div style="margin-top: 36px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--vietro-navy); margin-bottom: 4px;">
+            Sản Phẩm Chính Hãng Đang Phân Phối
+          </h2>
+          <p style="color: var(--gray-600); font-size: 0.92rem;">
+            Toàn bộ sản phẩm bán ra đều được kích hoạt bảo hành điện tử chính hãng theo số điện thoại
+          </p>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="catalogSearch" class="form-control" style="width: 260px;" placeholder="Tìm kiếm sản phẩm, model..." oninput="filterProducts()">
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="catalog-tabs">
+        <button class="catalog-tab active" onclick="selectCategory('ALL', this)">Tất cả</button>
+        <button class="catalog-tab" onclick="selectCategory('Điều hòa', this)">Điều hòa không khí</button>
+        <button class="catalog-tab" onclick="selectCategory('Tivi', this)">Smart Tivi</button>
+        <button class="catalog-tab" onclick="selectCategory('Tủ lạnh', this)">Tủ lạnh</button>
+        <button class="catalog-tab" onclick="selectCategory('Máy giặt', this)">Máy giặt</button>
+        <button class="catalog-tab" onclick="selectCategory('Quạt', this)">Quạt điện</button>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="productGrid" class="product-grid">
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--gray-600);">
+          Đang tải danh sách sản phẩm chính hãng...
+        </div>
+      </div>
+    </div>
+
+    <!-- Quy trình 5 bước chuẩn hóa -->
+    <div style="background: white; border-radius: 12px; padding: 32px 28px; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); margin: 30px 0 50px 0;">
+      <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--vietro-navy); margin-bottom: 6px; text-align: center;">
+        Quy Trình Xử Lý & Bảo Hành Chuẩn Hóa 5 Bước
+      </h3>
+      <p style="color: var(--gray-600); font-size: 0.92rem; margin-bottom: 24px; text-align: center;">
+        VietCare AI số hóa toàn diện quy trình tiếp nhận, xác minh điều kiện và điều phối kỹ thuật viên chuyên nghiệp:
+      </p>
+
+      <div class="process-steps">
+        <div class="process-card">
+          <div class="step-num">1</div>
+          <div style="font-weight: 700; color: var(--vietro-navy); font-size: 1rem;">Tiếp Nhận</div>
+          <div style="font-size: 0.82rem; color: var(--gray-600); margin-top: 6px; line-height: 1.4;">
+            Khách gửi trực tiếp qua tài khoản Web hoặc CSKH tiếp nhận qua hotline
+          </div>
+        </div>
+        <div class="process-card">
+          <div class="step-num">2</div>
+          <div style="font-weight: 700; color: var(--vietro-navy); font-size: 1rem;">Xác Minh</div>
+          <div style="font-size: 0.82rem; color: var(--gray-600); margin-top: 6px; line-height: 1.4;">
+            Đối chiếu thời hạn bảo hành điện tử và chính sách quy định của hãng
+          </div>
+        </div>
+        <div class="process-card">
+          <div class="step-num">3</div>
+          <div style="font-weight: 700; color: var(--vietro-navy); font-size: 1rem;">Phân Công</div>
+          <div style="font-size: 0.82rem; color: var(--gray-600); margin-top: 6px; line-height: 1.4;">
+            Điều phối kỹ thuật viên chuyên trách và sắp xếp lịch hẹn kiểm tra
+          </div>
+        </div>
+        <div class="process-card">
+          <div class="step-num">4</div>
+          <div style="font-weight: 700; color: var(--vietro-navy); font-size: 1rem;">Sửa Chữa</div>
+          <div style="font-size: 0.82rem; color: var(--gray-600); margin-top: 6px; line-height: 1.4;">
+            Kỹ thuật viên kiểm tra thực tế, xử lý sự cố và thay linh kiện chính hãng
+          </div>
+        </div>
+        <div class="process-card">
+          <div class="step-num">5</div>
+          <div style="font-weight: 700; color: var(--vietro-navy); font-size: 1rem;">Hoàn Tất</div>
+          <div style="font-size: 0.82rem; color: var(--gray-600); margin-top: 6px; line-height: 1.4;">
+            Khách nghiệm thu hài lòng, tự động cập nhật hệ thống và gửi email
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="background: #001f3f; color: #cbd5e1; padding: 24px 20px; font-size: 0.85rem; text-align: center;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <p style="margin-bottom: 6px;">© 2026 Siêu thị Điện máy Viettronimex Đà Nẵng. Bản quyền thuộc về Công ty CP Viettronimex Đà Nẵng.</p>
+      <p style="color: #94a3b8; font-size: 0.8rem;">Cơ sở 1: 460 Nguyễn Hữu Thọ, Q. Cẩm Lệ | Cơ sở 2: 06 Pasteur, Q. Hải Châu, TP. Đà Nẵng</p>
+    </div>
+  </footer>
+
+  <script>
+    let allProducts = [];
+    let currentCategory = 'ALL';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkUserSession();
+      loadCatalogProducts();
+    });
+
+    function checkUserSession() {
+      const userSession = JSON.parse(localStorage.getItem('vietcare_user') || 'null');
+      if (userSession) {
+        const dest = userSession.user_type === 'customer' ? '/customer' : '/staff';
+        document.getElementById('authArea').innerHTML = `
+          <div class="user-badge" style="background: white; border: 1px solid var(--gray-300);">
+            <span style="font-size: 0.88rem; font-weight: 700; color: var(--vietro-navy);">👤 ${escapeHtml(userSession.name)} (${escapeHtml(userSession.role || 'Khách hàng')})</span>
+            <a href="${dest}" class="btn btn-red" style="padding: 6px 14px; font-size: 0.82rem; text-decoration: none;">Vào trang làm việc</a>
+            <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+          </div>
+        `;
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('vietcare_user');
+      window.location.reload();
+    }
+
+    async function loadCatalogProducts() {
+      try {
+        const res = await apiFetch('/api/v1/products?limit=60');
+        allProducts = await res.json();
+        renderProducts(allProducts);
+      } catch (err) {
+        document.getElementById('productGrid').innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; color: var(--danger); padding: 30px;">
+            Lỗi tải dữ liệu sản phẩm: ${escapeHtml(err.message)}
+          </div>
+        `;
+      }
+    }
+
+    function selectCategory(cat, btn) {
+      currentCategory = cat;
+      document.querySelectorAll('.catalog-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterProducts();
+    }
+
+    function filterProducts() {
+      const kw = document.getElementById('catalogSearch').value.toLowerCase().trim();
+      let filtered = allProducts;
+
+      if (currentCategory !== 'ALL') {
+        filtered = filtered.filter(p => p.category === currentCategory);
+      }
+
+      if (kw) {
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(kw) ||
+          p.model.toLowerCase().includes(kw) ||
+          p.brand.toLowerCase().includes(kw)
+        );
+      }
+
+      renderProducts(filtered);
+    }
+
+    function renderProducts(products) {
+      const grid = document.getElementById('productGrid');
+      if (!products || products.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--gray-600);">Không tìm thấy sản phẩm nào trong danh mục này.</div>';
+        return;
+      }
+
+      grid.innerHTML = products.map(p => `
+        <div class="product-card">
+          <img src="${safeImageUrl(p.image_url)}" alt="${escapeHtml(p.name)}" class="product-card-img" onerror="this.src='https://vietro.com.vn/uploads/files/Untitled-2-01%20copy.png'">
+          <div class="product-card-body">
+            <div class="product-card-brand">${escapeHtml(p.brand)} - ${escapeHtml(p.category)}</div>
+            <div class="product-card-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+            <div class="product-card-model">Model: <strong>${escapeHtml(p.model)}</strong></div>
+            <div class="product-card-meta">
+              <span class="warranty-tag">🛡️ BH ${Number(p.warranty_months)} tháng</span>
+              <a href="/login" class="btn btn-outline-navy" style="padding: 4px 10px; font-size: 0.78rem; text-decoration: none;">Bảo hành</a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

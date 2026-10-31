@@ -1,0 +1,42 @@
+# Python virtualenv & cache
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment & Secrets
+.env
+.env.local
+.backups/
+vietcare_models.zip
+
+# Databases (Keep vietcare.db for sample data)
+*.sqlite3
+*.db
+!vietcare.db
+
+# Uploads (Will be created automatically at runtime)
+uploads/
+
+# Documents & Diagram folders
+docx/
+drawio/
+Feedback/
+
+# Internal / Specific Markdown Documentation
+HO-SO-THIET-KE-HE-THONG.md
+HUONG-DAN-CHAY.md
+dac-ta-chuc-nang-he-thong-bao-hanh.md
+
+# IDEs & System
+.vscode/
+.idea/
+*.log
+logs/
+build/
+dist/
+*.egg-info/
