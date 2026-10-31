@@ -18,6 +18,9 @@ VietCare AI là giải pháp số hóa toàn diện quy trình tiếp nhận, ph
 - Nhấp đúp chuột vào file **`2_chay_app.bat`**
 - Hệ thống sẽ tự động bật server và mở trình duyệt tại địa chỉ: `http://127.0.0.1:8000`
 
+### Bước 4: Cập nhật code mới (Khi có bản cập nhật)
+- Nhấp đúp chuột vào file **`3_cap_nhat.bat`** để tự động kéo code mới nhất về máy.
+
 ---
 
 ## 👥 Danh Sách Tài Khoản Đăng Nhập Mẫu
@@ -35,3 +38,4 @@ VietCare AI là giải pháp số hóa toàn diện quy trình tiếp nhận, ph
 - **Backend**: FastAPI, SQLAlchemy (SQLite), Pydantic
 - **Frontend**: HTML5, Vanilla JavaScript, CSS3
 - **AI & RAG**: Google Gemini API, ChromaDB
+
