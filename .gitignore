@@ -26,6 +26,7 @@ uploads/
 docx/
 drawio/
 Feedback/
+*.docx
 
 # Internal / Specific Markdown Documentation
 HO-SO-THIET-KE-HE-THONG.md
