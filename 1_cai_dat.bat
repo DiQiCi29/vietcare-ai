@@ -45,3 +45,4 @@ echo     Bay gio ban co the nhap dup vao "2_chay_app.bat" de mo ung dung.
 echo ======================================================
 echo.
 pause
+

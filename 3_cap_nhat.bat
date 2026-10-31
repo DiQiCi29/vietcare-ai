@@ -29,3 +29,4 @@ echo     Bạn có thể nhấp đúp vào "2_chay_app.bat" để tiếp tục s
 echo ======================================================
 echo.
 pause
+
