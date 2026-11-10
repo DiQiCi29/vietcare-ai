@@ -8,6 +8,12 @@ class LoginRequest(BaseModel):
     username_or_phone: str
     password: str
 
+class OtpRequest(BaseModel):
+    phone: str = Field(min_length=9, max_length=20)
+
+class OtpVerify(OtpRequest):
+    code: str = Field(min_length=4, max_length=10)
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

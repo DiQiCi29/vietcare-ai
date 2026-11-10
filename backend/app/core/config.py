@@ -25,6 +25,20 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: str = "baohanh@vietro.com.vn"
     EMAILS_FROM_NAME: str = "Viettronimex Bảo Hành"
     
+    # Customer OTP login. Leave Twilio values empty to use the on-screen demo code.
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_VERIFY_SERVICE_SID: str = ""
+    OTP_TTL_SECONDS: int = 300
+    OTP_RESEND_SECONDS: int = 30
+    OTP_MAX_ATTEMPTS: int = 5
+    # Dev/demo customers that log in without an OTP (comma-separated). Empty string disables it.
+    OTP_BYPASS_PHONES: str = "0900000000"
+
+    @property
+    def otp_bypass_phones(self) -> set:
+        return {p.strip() for p in self.OTP_BYPASS_PHONES.split(",") if p.strip()}
+
     UPLOAD_DIR: str = "./uploads"
     MAX_UPLOAD_SIZE_MB: int = 25
 

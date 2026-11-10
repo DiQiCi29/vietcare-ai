@@ -19,15 +19,53 @@
       <p style="font-size: 0.85rem; color: var(--gray-600);">Hệ thống Bảo hành Điện tử Viettronimex Đà Nẵng</p>
     </div>
 
-    <!-- Login Form Body (1 form duy nhất, tự phân quyền) -->
     <div class="login-body">
       <!-- Inline Alert Box -->
       <div id="loginAlert" style="display: none; padding: 10px 14px; margin-bottom: 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;"></div>
 
-      <form onsubmit="handleLoginSubmit(event)">
+      <div class="login-tabs" role="tablist" id="loginTabs">
+        <button type="button" role="tab" id="tabCustomer" class="login-tab active" aria-selected="true" onclick="switchTab('customer')">Khách hàng</button>
+        <button type="button" role="tab" id="tabStaff" class="login-tab" aria-selected="false" onclick="switchTab('staff')">Nhân viên</button>
+      </div>
+
+      <!-- Khách hàng, bước 1: số điện thoại -->
+      <form id="phoneStep" class="otp-step" onsubmit="handlePhoneSubmit(event)" novalidate>
+        <label class="otp-label" for="otpPhone">Số điện thoại đã đăng ký khi mua hàng</label>
+        <div class="phone-field">
+          <span class="phone-prefix" aria-hidden="true"><svg class="phone-flag" viewBox="0 0 30 20"><rect width="30" height="20" fill="#da251d"/><polygon fill="#ff0" points="15,4 16.76,9.43 22.47,9.43 17.85,12.79 19.61,18.21 15,14.86 10.39,18.21 12.15,12.79 7.53,9.43 13.24,9.43"/></svg>+84</span>
+          <input type="tel" id="otpPhone" placeholder="0905 xxx xxx" autocomplete="tel-national" inputmode="tel" maxlength="13">
+        </div>
+        <p class="otp-hint">Chúng tôi sẽ gửi mã xác thực gồm 6 chữ số qua SMS.</p>
+        <button type="submit" id="phoneSubmitBtn" class="btn btn-red otp-primary">Tiếp tục</button>
+      </form>
+
+      <!-- Khách hàng, bước 2: mã OTP -->
+      <form id="codeStep" class="otp-step" onsubmit="handleCodeSubmit(event)" hidden novalidate>
+        <button type="button" class="otp-back" onclick="backToPhone()">&larr; Đổi số điện thoại</button>
+        <h3 class="otp-title">Nhập mã xác thực</h3>
+        <p class="otp-sub">Mã gồm 6 chữ số đã được gửi tới <strong id="otpTarget"></strong></p>
+
+        <div id="demoNotice" class="otp-demo" hidden>
+          <span>Chế độ demo · Mã của bạn: <strong id="demoCode"></strong></span>
+          <button type="button" onclick="fillCode(document.getElementById('demoCode').textContent)">Điền tự động</button>
+        </div>
+
+        <div class="otp-boxes" id="otpBoxes" role="group" aria-label="Mã OTP 6 chữ số"></div>
+        <p class="otp-error" id="otpError" role="alert"></p>
+
+        <button type="submit" id="codeSubmitBtn" class="btn btn-red otp-primary" disabled>Xác nhận</button>
+        <p class="otp-resend-line">
+          Chưa nhận được mã?
+          <button type="button" id="resendOtpBtn" class="otp-link" onclick="sendOtp(true)" disabled>Gửi lại mã</button>
+          <span id="resendCountdown"></span>
+        </p>
+      </form>
+
+      <!-- Nhân viên: tài khoản + mật khẩu -->
+      <form id="staffForm" onsubmit="handleLoginSubmit(event)" hidden>
         <div class="form-group">
-          <label>Tài khoản (Số điện thoại khách hàng hoặc Tên nhân viên)</label>
-          <input type="text" id="loginIdentity" class="form-control" placeholder="Nhập số điện thoại hoặc tên đăng nhập" autocomplete="username" required>
+          <label>Tên đăng nhập hoặc email nhân viên</label>
+          <input type="text" id="loginIdentity" class="form-control" placeholder="Nhập tên đăng nhập" autocomplete="username" required>
         </div>
 
         <div class="form-group">
@@ -44,6 +82,11 @@
   </div>
 
   <script>
+    const CODE_LENGTH = 6;
+    let currentPhone = '';
+    let resendTimer = null;
+    let verifying = false;
+
     function showAlert(msg, isSuccess = false) {
       const el = document.getElementById('loginAlert');
       el.style.display = 'block';
@@ -63,6 +106,244 @@
       document.getElementById('loginAlert').style.display = 'none';
     }
 
+    function setBusy(btn, busy, label) {
+      btn.disabled = busy;
+      btn.classList.toggle('is-loading', busy);
+      if (label) btn.textContent = label;
+    }
+
+    function switchTab(tab) {
+      hideAlert();
+      const customer = tab === 'customer';
+      document.getElementById('phoneStep').hidden = !customer;
+      document.getElementById('codeStep').hidden = true;
+      document.getElementById('staffForm').hidden = customer;
+      document.getElementById('tabCustomer').classList.toggle('active', customer);
+      document.getElementById('tabStaff').classList.toggle('active', !customer);
+      document.getElementById('tabCustomer').setAttribute('aria-selected', customer);
+      document.getElementById('tabStaff').setAttribute('aria-selected', !customer);
+      // Hidden required fields would otherwise block submitting the visible form.
+      document.getElementById('loginIdentity').required = !customer;
+      document.getElementById('loginPassword').required = !customer;
+    }
+
+    // ---------- Phone step ----------
+    function normalizePhone(raw) {
+      let digits = raw.replace(/\D/g, '');
+      if (digits.startsWith('84') && digits.length === 11) digits = '0' + digits.slice(2);
+      if (!digits.startsWith('0') && digits.length === 9) digits = '0' + digits;
+      return digits;
+    }
+
+    function maskPhone(phone) {
+      return phone.length === 10 ? `${phone.slice(0, 4)} ••• ${phone.slice(7)}` : phone;
+    }
+
+    function handlePhoneSubmit(e) {
+      e.preventDefault();
+      const phone = normalizePhone(document.getElementById('otpPhone').value);
+      if (!/^0\d{9}$/.test(phone)) {
+        showAlert('Vui lòng nhập số điện thoại 10 chữ số, ví dụ 0905xxxxxx.');
+        document.getElementById('otpPhone').focus();
+        return;
+      }
+      currentPhone = phone;
+      sendOtp(false);
+    }
+
+    function backToPhone() {
+      hideAlert();
+      clearInterval(resendTimer);
+      document.getElementById('codeStep').hidden = true;
+      document.getElementById('phoneStep').hidden = false;
+      document.getElementById('loginTabs').hidden = false;
+      document.getElementById('otpPhone').focus();
+    }
+
+    async function sendOtp(isResend) {
+      hideAlert();
+      const btn = isResend ? document.getElementById('resendOtpBtn') : document.getElementById('phoneSubmitBtn');
+      setBusy(btn, true, isResend ? 'Đang gửi...' : 'Đang gửi mã...');
+      try {
+        const res = await fetch('/api/v1/auth/otp/request', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: currentPhone })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Số điện thoại không hợp lệ');
+        if (data.mode === 'bypass') return completeLogin(data.token);  // Dev account: no OTP.
+        showCodeStep(data);
+        if (isResend) showAlert('Đã gửi lại mã mới.', true);
+      } catch (err) {
+        showAlert(err.message);
+      } finally {
+        setBusy(btn, false, isResend ? 'Gửi lại mã' : 'Tiếp tục');
+        if (isResend) startResendCountdown(Number(btn.dataset.wait || 0));
+      }
+    }
+
+    // ---------- Code step ----------
+    function boxes() {
+      return [...document.querySelectorAll('#otpBoxes input')];
+    }
+
+    function buildBoxes() {
+      const holder = document.getElementById('otpBoxes');
+      holder.replaceChildren();
+      for (let i = 0; i < CODE_LENGTH; i++) {
+        const box = document.createElement('input');
+        box.type = 'text';
+        box.inputMode = 'numeric';
+        box.maxLength = CODE_LENGTH;  // Lets paste / SMS autofill deliver the whole code into one box.
+        box.autocomplete = i === 0 ? 'one-time-code' : 'off';
+        box.className = 'otp-box';
+        box.setAttribute('aria-label', `Chữ số ${i + 1}`);
+        box.addEventListener('input', () => onBoxInput(i));
+        box.addEventListener('keydown', e => onBoxKey(e, i));
+        box.addEventListener('focus', () => box.select());
+        box.addEventListener('paste', e => {
+          e.preventDefault();
+          fillCode((e.clipboardData || window.clipboardData).getData('text'), i);
+        });
+        holder.append(box);
+      }
+    }
+
+    function onBoxInput(i) {
+      const list = boxes();
+      const digits = list[i].value.replace(/\D/g, '');
+      if (digits.length > 1) return fillCode(digits, i);
+      list[i].value = digits;
+      clearCodeError();
+      if (digits && i < CODE_LENGTH - 1) list[i + 1].focus();
+      updateCodeState();
+    }
+
+    function onBoxKey(e, i) {
+      const list = boxes();
+      if (e.key === 'Backspace' && !list[i].value && i > 0) {
+        list[i - 1].value = '';
+        list[i - 1].focus();
+        updateCodeState();
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft' && i > 0) {
+        list[i - 1].focus(); e.preventDefault();
+      } else if (e.key === 'ArrowRight' && i < CODE_LENGTH - 1) {
+        list[i + 1].focus(); e.preventDefault();
+      }
+    }
+
+    function fillCode(text, start = 0) {
+      const digits = String(text || '').replace(/\D/g, '').slice(0, CODE_LENGTH - start).split('');
+      const list = boxes();
+      digits.forEach((d, k) => { list[start + k].value = d; });
+      clearCodeError();
+      list[Math.min(start + digits.length, CODE_LENGTH - 1)].focus();
+      updateCodeState();
+    }
+
+    function currentCode() {
+      return boxes().map(b => b.value).join('');
+    }
+
+    function updateCodeState() {
+      const code = currentCode();
+      boxes().forEach(b => b.classList.toggle('filled', !!b.value));
+      document.getElementById('codeSubmitBtn').disabled = code.length !== CODE_LENGTH;
+      if (code.length === CODE_LENGTH && !verifying) verifyCode();  // Auto-submit like most apps.
+    }
+
+    function showCodeError(msg) {
+      document.getElementById('otpError').textContent = msg;
+      const holder = document.getElementById('otpBoxes');
+      holder.classList.remove('shake');
+      void holder.offsetWidth;  // Restart the animation.
+      holder.classList.add('shake', 'error');
+    }
+
+    function clearCodeError() {
+      document.getElementById('otpError').textContent = '';
+      document.getElementById('otpBoxes').classList.remove('error');
+    }
+
+    function showCodeStep(data) {
+      document.getElementById('phoneStep').hidden = true;
+      document.getElementById('loginTabs').hidden = true;
+      document.getElementById('codeStep').hidden = false;
+      document.getElementById('otpTarget').textContent = maskPhone(currentPhone);
+      const demo = data.mode === 'demo';
+      document.getElementById('demoNotice').hidden = !demo;
+      document.getElementById('demoCode').textContent = demo ? data.demo_code : '';
+      buildBoxes();
+      clearCodeError();
+      updateCodeState();
+      document.getElementById('resendOtpBtn').dataset.wait = data.resend_after;
+      startResendCountdown(data.resend_after);
+      boxes()[0].focus();
+    }
+
+    function startResendCountdown(seconds) {
+      const btn = document.getElementById('resendOtpBtn');
+      const label = document.getElementById('resendCountdown');
+      clearInterval(resendTimer);
+      let left = seconds;
+      const render = () => {
+        btn.disabled = left > 0;
+        label.textContent = left > 0 ? `sau ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '';
+      };
+      render();
+      resendTimer = setInterval(() => {
+        left -= 1;
+        render();
+        if (left <= 0) clearInterval(resendTimer);
+      }, 1000);
+    }
+
+    function handleCodeSubmit(e) {
+      e.preventDefault();
+      if (currentCode().length === CODE_LENGTH) verifyCode();
+    }
+
+    async function verifyCode() {
+      verifying = true;
+      hideAlert();
+      const btn = document.getElementById('codeSubmitBtn');
+      setBusy(btn, true, 'Đang xác thực...');
+      boxes().forEach(b => { b.disabled = true; });
+      try {
+        const res = await fetch('/api/v1/auth/otp/verify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentPhone, code: currentCode() })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Mã OTP không chính xác');
+        boxes().forEach(b => b.classList.add('success'));
+        btn.textContent = 'Thành công';
+        completeLogin(data);
+      } catch (err) {
+        boxes().forEach(b => { b.disabled = false; b.value = ''; });
+        showCodeError(err.message);
+        setBusy(btn, false, 'Xác nhận');
+        btn.disabled = true;
+        boxes()[0].focus();
+        verifying = false;
+      }
+    }
+
+    function completeLogin(data) {
+      showAlert(`Đăng nhập thành công! Chào ${data.name}. Đang chuyển hướng...`, true);
+      localStorage.setItem('vietcare_user', JSON.stringify(data));
+      setTimeout(() => {
+        if (data.user_type === 'customer') {
+          window.location.href = '/customer';
+        } else {
+          window.location.href = data.role === 'ADMIN' ? '/manager' : '/staff';  // CSKH, KTV, Admin
+        }
+      }, 350);
+    }
+
+    switchTab('customer');
+
+    // ---------- Staff ----------
     async function handleLoginSubmit(e) {
       e.preventDefault();
       const identity = document.getElementById('loginIdentity').value.trim();
@@ -90,18 +371,7 @@
           return;
         }
 
-        showAlert(`Đăng nhập thành công! Chào ${data.name}. Đang chuyển hướng...`, true);
-        localStorage.setItem('vietcare_user', JSON.stringify(data));
-
-        // Tự động phân quyền vào đúng cổng:
-        setTimeout(() => {
-          if (data.user_type === 'customer') {
-            window.location.href = '/customer';
-          } else {
-            // CSKH, KTV, Admin
-            window.location.href = data.role === 'ADMIN' ? '/manager' : '/staff';
-          }
-        }, 350);
+        completeLogin(data);
       } catch (err) {
         showAlert('Lỗi kết nối máy chủ: ' + err.message);
         btn.innerText = 'Đăng Nhập Vào Hệ Thống';

@@ -28,7 +28,8 @@ echo.
 echo   * Địa chỉ web: http://127.0.0.1:8000
 echo.
 echo   * TÀI KHOẢN ĐĂNG NHẬP MẪU:
-echo     - Khách hàng:    SĐT: 0905123456   - MK: 123456
+echo     - Khách hàng DEV: SĐT: 0900000000  - Vào thẳng, KHÔNG cần OTP (dùng khi xem web)
+echo     - Khách hàng OTP: SĐT thật đã đăng ký Twilio - CHỈ 40 lượt, để dành cho buổi demo
 echo     - CSKH:          TK:  cskh         - MK: 123456
 echo     - Kỹ thuật viên: TK:  ktv_minh     - MK: 123456
 echo     - Trưởng phòng:  TK:  admin        - MK: 123456

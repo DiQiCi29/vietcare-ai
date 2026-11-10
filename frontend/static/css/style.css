@@ -849,3 +849,45 @@ body {
   .chat-input-bar input { min-width: 0; }
   .appointment-filters { width: 100%; }
 }
+
+/* Login: customer OTP / staff password tabs */
+.login-tabs { display: flex; gap: 4px; margin-bottom: 16px; padding: 4px; background: var(--gray-100); border-radius: 8px; }
+.login-tab { flex: 1; padding: 8px 10px; border: 0; border-radius: 6px; background: transparent; color: var(--gray-600); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.login-tab.active { background: #fff; color: var(--vietro-red); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+.login-tabs[hidden], .otp-step[hidden] { display: none; }
+
+/* Step 1: phone */
+.otp-label { display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: var(--gray-700); }
+.phone-field { display: flex; align-items: center; border: 1.5px solid var(--gray-300); border-radius: 10px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+.phone-field:focus-within { border-color: var(--vietro-red); box-shadow: 0 0 0 3px rgba(225, 27, 34, 0.12); }
+.phone-prefix { display: flex; align-items: center; gap: 6px; padding: 0 12px; border-right: 1px solid var(--gray-200); color: var(--gray-700); font-size: 0.9rem; font-weight: 600; white-space: nowrap; }
+.phone-flag { width: 20px; height: 14px; border-radius: 2px; }
+.phone-field input { flex: 1; min-width: 0; padding: 13px 12px; border: 0; outline: 0; background: transparent; font: inherit; font-size: 1rem; letter-spacing: 0.5px; }
+.otp-hint { margin: 8px 0 0; font-size: 0.78rem; color: var(--gray-600); }
+.otp-primary { width: 100%; margin-top: 18px; padding: 13px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; }
+.otp-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn.is-loading::before { content: ""; display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -2px; border: 2px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; animation: otp-spin .7s linear infinite; }
+
+/* Step 2: code */
+.otp-back { padding: 0; border: 0; background: none; color: var(--gray-600); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.otp-back:hover { color: var(--vietro-red); }
+.otp-title { margin: 14px 0 4px; font-size: 1.1rem; font-weight: 800; color: var(--vietro-navy); }
+.otp-sub { margin: 0 0 16px; font-size: 0.85rem; color: var(--gray-600); }
+.otp-sub strong { color: var(--gray-900); letter-spacing: 0.5px; }
+.otp-demo { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; padding: 10px 12px; border: 1px dashed var(--vietro-yellow); border-radius: 8px; background: #fffbeb; color: #92400e; font-size: 0.8rem; }
+.otp-demo strong { font-size: 0.95rem; letter-spacing: 2px; }
+.otp-demo button { flex-shrink: 0; padding: 5px 10px; border: 0; border-radius: 6px; background: var(--vietro-yellow); color: #fff; font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+.otp-boxes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.otp-box { width: 100%; aspect-ratio: 1 / 1.15; min-width: 0; padding: 0; border: 1.5px solid var(--gray-300); border-radius: 10px; background: var(--gray-50); color: var(--gray-900); font: inherit; font-size: 1.4rem; font-weight: 700; text-align: center; caret-color: var(--vietro-red); transition: border-color .15s, box-shadow .15s, background .15s; }
+.otp-box:focus { outline: 0; border-color: var(--vietro-red); background: #fff; box-shadow: 0 0 0 3px rgba(225, 27, 34, 0.12); }
+.otp-box.filled { border-color: var(--vietro-navy); background: #fff; }
+.otp-box.success { border-color: var(--success); background: var(--success-bg); color: var(--success); }
+.otp-boxes.error .otp-box { border-color: var(--danger); background: var(--danger-bg); }
+.otp-boxes.shake { animation: otp-shake .35s; }
+.otp-error { min-height: 1.2em; margin: 8px 0 0; color: var(--danger); font-size: 0.8rem; font-weight: 600; }
+.otp-resend-line { margin: 14px 0 0; text-align: center; font-size: 0.82rem; color: var(--gray-600); }
+.otp-link { padding: 0; border: 0; background: none; color: var(--vietro-blue); font: inherit; font-weight: 700; cursor: pointer; }
+.otp-link:disabled { color: var(--gray-600); font-weight: 600; cursor: default; }
+@keyframes otp-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@keyframes otp-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .otp-boxes.shake { animation: none; } }

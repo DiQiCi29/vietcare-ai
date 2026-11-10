@@ -18,7 +18,7 @@ from backend.app.models.warranty import (
 from backend.app.models.chat import ChatSession, ChatMessage
 from backend.app.models.notification import NotificationLog
 from backend.app.schemas.api_schemas import (
-    LoginRequest, TokenResponse, CustomerProductOut, CreateRequestInput, StatusUpdateInput, ChatInput
+    LoginRequest, OtpRequest, OtpVerify, TokenResponse, CustomerProductOut, CreateRequestInput, StatusUpdateInput, ChatInput
 )
 from backend.app.rag.retriever import retrieve_relevant_policies, sync_policies_to_vector_store
 from backend.app.rag.chain import generate_chat_response
@@ -38,35 +38,63 @@ from backend.app.core.config import settings
 from backend.app.services.business_hours import is_overdue, sla_data, local_time, utc_now
 from backend.app.services.request_codes import allocate_request_code
 from backend.app.services.attachments import stage_media, remove_staged, TYPES
+from backend.app.services.otp import send_code, check_code, to_e164
 
 router = APIRouter()
 
 # --------------------------------------------------------------------------
 # 1. AUTHENTICATION (Cả Khách hàng đăng nhập bằng SĐT & Nhân viên bằng Username)
 # --------------------------------------------------------------------------
+def find_customer_for_otp(db, phone):
+    """Customers are stored with local numbers (0905...); accept +84/84 forms too."""
+    e164 = to_e164(phone)
+    local = '0' + e164[3:] if e164.startswith('+84') else e164
+    customer = db.query(Customer).filter(Customer.phone.in_({phone.strip(), local})).first()
+    if not customer:
+        raise HTTPException(404, "Số điện thoại chưa được đăng ký tại cửa hàng")
+    if not customer.is_active:
+        raise HTTPException(403, "Tài khoản đã bị khóa")
+    return customer
+
+
+@router.post("/auth/otp/request")
+def request_login_otp(payload: OtpRequest, db: Session = Depends(get_db)):
+    customer = find_customer_for_otp(db, payload.phone)
+    if customer.phone in settings.otp_bypass_phones:
+        # Dev account: skip SMS so development never spends Twilio verifications.
+        return {"mode": "bypass", "message": "Tài khoản dev, đăng nhập không cần OTP",
+                "token": customer_token(customer).model_dump()}
+    return send_code(customer.phone)
+
+
+@router.post("/auth/otp/verify", response_model=TokenResponse)
+def verify_login_otp(payload: OtpVerify, db: Session = Depends(get_db)):
+    customer = find_customer_for_otp(db, payload.phone)
+    check_code(customer.phone, payload.code)
+    return customer_token(customer)
+
+
+def customer_token(customer):
+    return TokenResponse(
+        access_token=create_access_token(subject=str(customer.id), role="CUSTOMER"),
+        user_id=customer.id,
+        user_type="customer",
+        name=customer.full_name,
+        role="CUSTOMER",
+        phone_or_email=customer.phone,
+        is_first_login=False,  # OTP login has no store-issued password to change.
+    )
+
+
 @router.post("/auth/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     identity = payload.username_or_phone.strip()
-    
-    # 1. Check Customer table (Phone number)
-    customer = db.query(Customer).filter(Customer.phone == identity).first()
-    if customer:
-        if not customer.is_active:
-            raise HTTPException(403, "Tài khoản đã bị khóa")
-        if not verify_password(payload.password, customer.hashed_password):
-            raise HTTPException(status_code=400, detail="Mật khẩu không chính xác")
-        token = create_access_token(subject=str(customer.id), role="CUSTOMER")
-        return TokenResponse(
-            access_token=token,
-            user_id=customer.id,
-            user_type="customer",
-            name=customer.full_name,
-            role="CUSTOMER",
-            phone_or_email=customer.phone,
-            is_first_login=not customer.is_first_login_changed
-        )
 
-    # 2. Check Staff User table (Username or Email)
+    # Customers sign in with an SMS one-time code only.
+    if db.query(Customer).filter(Customer.phone == identity).first():
+        raise HTTPException(400, "Khách hàng đăng nhập bằng mã OTP gửi qua số điện thoại")
+
+    # Staff (CSKH, KTV, Admin) keep username/email + password.
     staff = db.query(User).filter(
         or_(User.username == identity, User.email == identity)
     ).first()
