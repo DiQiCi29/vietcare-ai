@@ -65,8 +65,8 @@ echo.
 echo [3/4] Dang cai dat cac thu vien can thiet cho he thong...
 echo (Vui long cho trong giay lat, he thong dang tu dong tai cac goi phan mem...)
 call .\venv\Scripts\activate
-python -m pip install --upgrade pip >nul 2>&1
-pip install -r requirements.txt
+.\venv\Scripts\python.exe -m pip install --upgrade pip >nul 2>&1
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
 
 echo.
 :: 4. Thiet lap cau hinh

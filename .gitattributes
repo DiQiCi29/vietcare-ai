@@ -1,0 +1,2 @@
+# cmd.exe misparses .bat files with LF line endings (esp. with UTF-8 text)
+*.bat text eol=crlf

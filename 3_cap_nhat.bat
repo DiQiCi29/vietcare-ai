@@ -21,7 +21,7 @@ echo.
 echo [2/2] Kiểm tra và cập nhật các gói thư viện mới (nếu có)...
 if exist venv (
     call .\venv\Scripts\activate
-    pip install -r requirements.txt
+    .\venv\Scripts\python.exe -m pip install -r requirements.txt
 )
 
 echo.
