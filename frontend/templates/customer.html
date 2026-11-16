@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
   <script src="/static/js/security.js"></script>
+  <script src="/static/js/notify.js"></script>
 </head>
 <body>
 
@@ -336,16 +337,12 @@
           body: JSON.stringify({ phone, message, sold_item_id: Number(document.getElementById('contactSoldItem').value) })
         });
         const data = await res.json();
-        if (res.ok) {
-          showRequestSuccess(data);
-          loadProducts();
-          document.getElementById('contactMessage').value = '';
-          switchCustomerTab('requests');
-        } else {
-          alert(data.detail || 'Không thể gửi yêu cầu.');
-        }
+        loadProducts();
+        document.getElementById('contactMessage').value = '';
+        switchCustomerTab('requests');
+        showRequestSuccess(data);
       } catch (err) {
-        alert('Lỗi: ' + err.message);
+        showNotice(err.message, { type: 'error', title: 'Không gửi được yêu cầu' });
       } finally {
         submitButton.disabled = false;
       }
@@ -470,7 +467,7 @@
       const p = customerProducts.find(item => item.id === soldItemId);
       if (!p) return;
       if (p.is_expired) {
-        alert('Sản phẩm đã hết hạn bảo hành, không thể tạo phiếu mới.');
+        showNotice('Sản phẩm này đã hết hạn bảo hành nên không thể tạo yêu cầu mới. Vui lòng gọi tổng đài **1800 64 64 92** để được hỗ trợ sửa chữa tính phí.', { type: 'warning', title: 'Sản phẩm đã hết hạn bảo hành' });
         return;
       }
 
@@ -518,36 +515,23 @@
           body: files.length ? formData : JSON.stringify(payload)
         });
         const data = await res.json();
-        if (!res.ok) {
-          alert(data.detail || 'Không thể gửi yêu cầu.');
-          return;
-        }
-
         closeWarrantyModal();
         document.getElementById('incidentFiles').value = '';
         previewIncidentFiles(document.getElementById('incidentFiles'), 'incidentPreview');
-        showRequestSuccess(data);
         loadProducts();
         switchCustomerTab('requests');
+        showRequestSuccess(data);
       } catch (err) {
-        alert('Lỗi: ' + err.message);
+        showNotice(err.message, { type: 'error', title: 'Không gửi được yêu cầu' });
       } finally {
         submitButton.disabled = false;
       }
     }
 
     function showRequestSuccess(data) {
-      const panel = document.getElementById('requestSuccess');
-      panel.hidden = false;
-      panel.innerHTML = `<div class="success-mark" aria-hidden="true">&check;</div>
-        <h2>Gửi yêu cầu thành công!</h2>
-        <p>Yêu cầu của bạn đã được tiếp nhận.</p>
-        <dl><div><dt>Mã yêu cầu</dt><dd>${escapeHtml(data.request_code)}</dd></div>
-        <div><dt>Trạng thái</dt><dd><span class="status-pill tiepnhan">Đã tiếp nhận</span></dd></div></dl>
-        <p class="success-help">Bạn có thể theo dõi cập nhật trong Yêu cầu bảo hành của tôi.</p>
-        <button type="button" class="btn btn-red" onclick="document.getElementById('requestSuccess').hidden = true; switchCustomerTab('requests')">Theo dõi trạng thái</button>
-        <button type="button" class="success-close" aria-label="Đóng thông báo" onclick="document.getElementById('requestSuccess').hidden = true">&times;</button>`;
-      panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+      const email = data.email_notified ? '\nThông báo xác nhận đã được gửi tới email của bạn.' : '';
+      showNotice(`Mã yêu cầu của bạn: **${data.request_code}**\nBộ phận CSKH sẽ xác minh và liên hệ lại trong giờ làm việc. Bạn có thể theo dõi tiến độ trong mục Yêu cầu bảo hành của tôi.${email}`,
+                 { type: 'success', title: 'Gửi yêu cầu thành công', buttonText: 'Theo dõi yêu cầu' });
     }
 
     // Chatbot Functions
@@ -559,7 +543,7 @@
       const p = customerProducts.find(item => item.id === soldItemId);
       if (!p) return;
       if (p.is_expired) {
-        alert('Sản phẩm đã hết bảo hành.');
+        showNotice('Sản phẩm này đã hết hạn bảo hành nên không hỗ trợ tư vấn qua chat. Vui lòng gọi tổng đài **1800 64 64 92** để được hỗ trợ.', { type: 'warning', title: 'Sản phẩm đã hết hạn bảo hành' });
         return;
       }
 
@@ -617,7 +601,7 @@
       const text = input.value.trim();
       if (!text || chatSending) return;
       if (activeChatProduct?.is_expired) {
-        alert('Sản phẩm đã hết hạn bảo hành, không hỗ trợ chat tư vấn.');
+        showNotice('Sản phẩm này đã hết hạn bảo hành nên không hỗ trợ tư vấn qua chat. Vui lòng gọi tổng đài **1800 64 64 92** để được hỗ trợ.', { type: 'warning', title: 'Sản phẩm đã hết hạn bảo hành' });
         return;
       }
       chatSending = true;

@@ -22,6 +22,7 @@ from backend.app.schemas.api_schemas import (
 )
 from backend.app.rag.retriever import retrieve_relevant_policies, sync_policies_to_vector_store
 from backend.app.rag.chain import generate_chat_response
+from backend.app.rag.advice import guard_response
 from backend.app.services.email_service import send_warranty_status_email
 
 from backend.app.core.auth import (
@@ -313,7 +314,7 @@ def persist_warranty_request(payload, db, actor, media=None):
             WarrantyRequest.status.notin_([RequestStatus.COMPLETED, RequestStatus.REJECTED])
         ).first()
         if active:
-            raise HTTPException(status_code=400, detail=f"Sản phẩm này đang có yêu cầu xử lý ({active.request_code}), vui lòng không gửi trùng.")
+            raise HTTPException(status_code=400, detail=f"Sản phẩm này đang có phiếu {active.request_code} chưa xử lý xong. Vui lòng theo dõi phiếu đó trong mục Yêu cầu bảo hành, không cần gửi thêm yêu cầu mới.")
 
     # Allocate a number transactionally; existing historical codes stay unchanged.
     created = utc_now()
@@ -348,8 +349,9 @@ def persist_warranty_request(payload, db, actor, media=None):
     db.refresh(req)
 
     # 5. Send automated email notification (TB-01)
+    email_notified = False
     try:
-        send_warranty_status_email(db, req, RequestStatus.RECEIVED.value)
+        email_notified = send_warranty_status_email(db, req, RequestStatus.RECEIVED.value)
     except Exception:
         db.rollback()
         logging.getLogger(__name__).warning("Không ghi được thông báo cho phiếu %s", req.id)
@@ -358,7 +360,8 @@ def persist_warranty_request(payload, db, actor, media=None):
         "success": True,
         "request_code": req.request_code,
         "message": "Gửi yêu cầu bảo hành thành công!",
-        "request_id": req.id
+        "request_id": req.id,
+        "email_notified": email_notified,
     }
 
 
@@ -448,7 +451,9 @@ def chat_with_ai(payload: ChatInput, db: Session = Depends(get_db), actor=Depend
             history = [{"sender": m.sender, "message": m.message} for m in reversed(previous)]
 
     creating = is_create_request_query(query)
-    tracking = not creating and is_tracking_query(query, history)
+    # Out-of-scope, jailbreak and "talk to staff" queries get fixed replies, never ticket lookups.
+    guarded = guard_response(query)
+    tracking = not creating and not guarded and is_tracking_query(query, history)
     own_request = None
     if payload.request_id is not None:
         own_request = db.query(WarrantyRequest).filter(WarrantyRequest.id == payload.request_id,
@@ -619,8 +624,9 @@ def load_request(db, request_id, actor):
 def finish_transition(db, req, payload):
     db.commit()
     db.refresh(req)
-    send_warranty_status_email(db, req, req.status.value, notes=payload.notes)
-    return {"success": True, "status": req.status.value, "message": "Cập nhật yêu cầu thành công"}
+    email_notified = send_warranty_status_email(db, req, req.status.value, notes=payload.notes)
+    return {"success": True, "status": req.status.value, "request_code": req.request_code,
+            "message": "Cập nhật yêu cầu thành công", "email_notified": email_notified}
 
 
 @router.put("/staff/requests/{request_id}/status")

@@ -29,6 +29,7 @@ from fastapi.responses import FileResponse
 from backend.app.api.v1.endpoints import router as api_router
 from backend.app.rag.retriever import sync_policies_to_vector_store
 from backend.app.core.database import SessionLocal
+from backend.app.services.request_codes import migrate_legacy_request_codes
 
 # Ensure upload and static directories exist
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
@@ -46,6 +47,8 @@ def on_startup():
     db = SessionLocal()
     try:
         sync_policies_to_vector_store(db)
+        # Old tickets used BH-YYYY-NNNN; bring them to BH-MMYY-NNNN (no-op once done).
+        migrate_legacy_request_codes(db)
     finally:
         db.close()
 

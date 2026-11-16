@@ -1,6 +1,15 @@
 import logging
+import smtplib
+import ssl
+import threading
 from datetime import datetime
+from email.message import EmailMessage
+from email.utils import formataddr
+
 from sqlalchemy.orm import Session
+
+from backend.app.core.config import settings
+from backend.app.core.database import SessionLocal
 from backend.app.models.warranty import WarrantyRequest
 from backend.app.models.notification import NotificationLog
 
@@ -43,7 +52,7 @@ def send_warranty_status_email(db: Session, request: WarrantyRequest, new_status
     """
     customer = request.customer
     if not customer or not customer.email:
-        return
+        return False
 
     product_name = request.sold_item.product.name if request.sold_item else "Thiết bị điện máy"
     tech_name = request.technician.name if request.technician else "Chuyên viên kỹ thuật"
@@ -64,15 +73,65 @@ def send_warranty_status_email(db: Session, request: WarrantyRequest, new_status
         notes=notes or "Không có ghi chú thêm."
     )
 
-    # Save to notification log (TB-01 requirement)
+    # Save to notification log (TB-01 requirement), then deliver in the background so the
+    # staff action never waits on (or fails because of) the mail server.
+    configured = smtp_configured()
     log = NotificationLog(
         request_id=request.id,
         recipient_email=customer.email,
         subject=subject,
         content=body,
-        status="SENT",
+        status="PENDING" if configured else "NOT_CONFIGURED",
         created_at=datetime.utcnow()
     )
     db.add(log)
     db.commit()
-    logger.info(f"-> [TB-01 EMAIL SENT] Đến: {customer.email} | Tiêu đề: {subject}")
+    if not configured:
+        logger.info(f"-> [TB-01 EMAIL CHƯA GỬI - chưa cấu hình SMTP] Đến: {customer.email} | Tiêu đề: {subject}")
+        return False
+    threading.Thread(target=_deliver, args=(log.id, customer.email, subject, body), daemon=True).start()
+    return True
+
+
+def smtp_configured():
+    return bool(settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD)
+
+
+def send_email(to, subject, body):
+    """Send one plain-text email through the configured SMTP server (Gmail: port 587 + App Password)."""
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    # Gmail rewrites any other From address to the login account, so default to SMTP_USER.
+    msg["From"] = formataddr((settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL or settings.SMTP_USER))
+    msg["To"] = to
+    msg.set_content(body + "\n\n---\nViettronimex Đà Nẵng - Tổng đài bảo hành miễn phí: 1800 64 64 92\n"
+                    "Email được gửi tự động, vui lòng không trả lời email này.")
+    context = ssl.create_default_context()
+    if settings.SMTP_PORT == 465:
+        with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, context=context, timeout=20) as server:
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+    else:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as server:
+            server.starttls(context=context)
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.send_message(msg)
+
+
+def _deliver(log_id, to, subject, body):
+    error = None
+    try:
+        send_email(to, subject, body)
+    except (smtplib.SMTPException, OSError) as exc:
+        # Never log the password; the exception text from smtplib does not contain it.
+        error = f"{type(exc).__name__}: {exc}"[:500]
+    with SessionLocal() as db:
+        log = db.get(NotificationLog, log_id)
+        if log:
+            log.status = "FAILED" if error else "SENT"
+            log.error_message = error
+            db.commit()
+    if error:
+        logger.warning(f"-> [TB-01 EMAIL LỖI] Đến: {to} | {error}")
+    else:
+        logger.info(f"-> [TB-01 EMAIL SENT] Đến: {to} | Tiêu đề: {subject}")

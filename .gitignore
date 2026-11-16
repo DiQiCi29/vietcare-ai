@@ -41,3 +41,6 @@ logs/
 build/
 dist/
 *.egg-info/
+
+# Database backups
+*.db.bak

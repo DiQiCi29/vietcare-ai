@@ -66,6 +66,28 @@ Giới hạn bản dùng thử: 30 ngày, 40 lượt xác thực, 100 SMS, nội
 
 ---
 
+## 📧 Email Thông Báo Trạng Thái Bảo Hành (Gmail)
+
+Mỗi khi phiếu được tạo hoặc đổi trạng thái (xác minh, phân công, nhận việc, hoàn tất, từ chối), hệ thống gửi email cho khách. Nếu chưa cấu hình, email chỉ được ghi vào nhật ký (trạng thái `NOT_CONFIGURED`), app vẫn chạy bình thường.
+
+1. Đăng nhập Gmail dùng để gửi → [myaccount.google.com/security](https://myaccount.google.com/security) → bật **Xác minh 2 bước**.
+2. Mở [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), đặt tên `VietCare` → **Tạo**, sao chép mật khẩu 16 ký tự (bỏ dấu cách).
+3. Điền vào `.env`:
+   ```
+   SMTP_USER="tenban@gmail.com"
+   SMTP_PASSWORD="abcdefghijklmnop"
+   EMAILS_FROM_EMAIL="tenban@gmail.com"
+   ```
+4. Gửi thử: `.\venv\Scripts\python.exe -m backend.scripts.test_email email_nhan@gmail.com`
+5. Gán email thật cho khách mẫu để nhận thông báo, ví dụ tài khoản dev:
+   `.\venv\Scripts\python.exe -m backend.scripts.set_customer_email 0900000000 email_nhan@gmail.com`
+6. Khởi động lại app.
+
+> [!WARNING]
+> Không commit file `.env` (đã có trong `.gitignore`). Mỗi thành viên tự tạo App Password riêng. Gmail cá nhân gửi tối đa khoảng 500 email/ngày.
+
+---
+
 ## 🛠️ Công Nghệ Sử Dụng
 - **Backend**: FastAPI, SQLAlchemy (SQLite), Pydantic
 - **Frontend**: HTML5, Vanilla JavaScript, CSS3

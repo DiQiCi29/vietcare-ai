@@ -5,8 +5,8 @@ All requests use a separate in-memory database; no production data or AI calls.
 import os
 os.environ['DATABASE_URL'] = 'sqlite://'
 os.environ['DEBUG'] = 'false'
-for _name in ('TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_VERIFY_SERVICE_SID'):
-    os.environ[_name] = ''  # Never reach Twilio from tests, even when .env holds real keys.
+for _name in ('TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_VERIFY_SERVICE_SID', 'SMTP_USER', 'SMTP_PASSWORD'):
+    os.environ[_name] = ''  # Never reach Twilio or send real email from tests, even when .env holds real keys.
 
 from datetime import date, timedelta
 import unittest

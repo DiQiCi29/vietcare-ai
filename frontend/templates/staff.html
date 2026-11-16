@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
   <script src="/static/js/security.js"></script>
+  <script src="/static/js/notify.js"></script>
 </head>
 <body>
 
@@ -100,7 +101,6 @@
     </div>
 
     <!-- Centralized Management Table -->
-    <div id="staffActionNotice" role="status" style="display: none; margin-bottom: 14px; padding: 12px 16px; border-radius: 8px; background: #ecfdf5; color: #166534;"></div>
     <p id="staffFilterSummary" class="filter-summary" role="status"></p>
     <section id="newAssignments" class="new-assignments" hidden aria-labelledby="newAssignmentsTitle">
       <h2 id="newAssignmentsTitle">Ca mới chờ xác nhận</h2>
@@ -494,29 +494,50 @@
       }
     }
 
-    function declineAssignment(id) {
-      const reason = prompt('Lý do từ chối nhận việc:');
-      if (reason?.trim()) quickStatus(id, 'Phân công', `KTV từ chối nhận việc: ${reason.trim()}`);
+    function requestCode(id) {
+      return staffRequestRows.find(row => row.id === id)?.request_code || `#${id}`;
+    }
+
+    function emailLine(data) {
+      return data?.email_notified ? '\nKhách hàng sẽ nhận được email thông báo.' : '';
+    }
+
+    async function declineAssignment(id) {
+      const reason = await askText(`Từ chối nhận việc phiếu ${requestCode(id)}`, {
+        message: 'Vui lòng ghi lý do để CSKH phân công lại kỹ thuật viên khác.',
+        placeholder: 'VD: Trùng lịch, ngoài khu vực phụ trách...',
+        confirmText: 'Từ chối nhận việc'
+      });
+      if (reason) quickStatus(id, 'Phân công', `KTV từ chối nhận việc: ${reason}`);
     }
 
     async function quickStatus(id, newStatus, note) {
+      const code = requestCode(id);
       try {
         const res = await apiFetch(`/api/v1/staff/requests/${id}/status`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ new_status: newStatus, notes: note })
         });
-        if (res.ok) {
-          alert(`Đã cập nhật ca máy: ${newStatus}`);
-          loadStaffData();
-          if (staffSession.role === 'TECHNICIAN') {
-            loadTechPersonalKPI();
-          } else {
-            loadKPIs();
-          }
+        const data = await res.json();
+        loadStaffData();
+        if (staffSession.role === 'TECHNICIAN') {
+          loadTechPersonalKPI();
+        } else {
+          loadKPIs();
+        }
+        if (newStatus === 'Sửa chữa') {
+          showNotice(`Bạn đã nhận phiếu **${code}**. Vui lòng liên hệ khách hàng trước khi đến kiểm tra.${emailLine(data)}`,
+                     { type: 'success', title: 'Đã nhận việc' });
+        } else if (newStatus === 'Phân công' && note?.startsWith('KTV từ chối')) {
+          showNotice(`Đã từ chối nhận phiếu **${code}**. CSKH sẽ phân công kỹ thuật viên khác.`,
+                     { type: 'info', title: 'Đã từ chối nhận việc' });
+        } else {
+          showNotice(`Phiếu **${code}** đã chuyển sang trạng thái “${data.status || newStatus}”.${emailLine(data)}`,
+                     { type: 'success', title: 'Đã cập nhật phiếu' });
         }
       } catch (e) {
-        alert(e.message);
+        showNotice(e.message, { type: 'error', title: `Không cập nhật được phiếu ${code}` });
       }
     }
 
@@ -560,20 +581,15 @@
           body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (res.ok) {
-          alert(`Đã tạo phiếu bảo hành cuộc gọi thành công! Mã: ${data.request_code}`);
-          closePhoneModal();
-          await loadStaffData();
-          await loadKPIs();
-        } else {
-          alert(data.detail || 'Lỗi tạo phiếu');
-        }
+        closePhoneModal();
+        showNotice(`Đã tạo phiếu **${data.request_code}** cho khách ${payload.customer_name || payload.customer_phone} qua kênh Điện thoại. Phiếu đang chờ CSKH xác minh.${emailLine(data)}`,
+                   { type: 'success', title: 'Tạo yêu cầu thành công' });
+        await loadStaffData();
+        await loadKPIs();
       } catch (err) {
-        alert(err.message);
+        showNotice(err.message, { type: 'error', title: 'Không tạo được yêu cầu' });
       }
     }
-
-    let staffActionNoticeTimer;
 
     function openAssignModal(id, code) {
       currentAssignId = id;
@@ -609,24 +625,15 @@
           body: JSON.stringify({ technician_id: techId, appointment_date: appDate, notes: notes })
         });
         const data = await res.json();
-        if (res.ok) {
-          closeAssignModal();
-          await loadStaffData();
-          await loadKPIs();
-          const technician = technicians.find(row => row.id === techId);
-          const notice = document.getElementById('staffActionNotice');
-          notice.innerText = `Đã lưu phân công cho phiếu ${document.getElementById('assignReqCode').innerText}: ${technician?.name || 'kỹ thuật viên đã chọn'}, lịch hẹn ${appDate.split('-').reverse().join('/')}. Đang chờ kỹ thuật viên nhận việc.`;
-          notice.style.display = 'block';
-          clearTimeout(staffActionNoticeTimer);
-          staffActionNoticeTimer = setTimeout(() => {
-            notice.style.display = 'none';
-            notice.textContent = '';
-          }, 5000);
-        } else {
-          alert(data.detail || 'Lỗi phân công');
-        }
+        const code = document.getElementById('assignReqCode').innerText;
+        const technician = technicians.find(row => row.id === techId);
+        closeAssignModal();
+        showNotice(`Phiếu **${code}** đã giao cho ${technician?.name || 'kỹ thuật viên đã chọn'}, lịch hẹn ${appDate.split('-').reverse().join('/')}. Đang chờ kỹ thuật viên nhận việc.${emailLine(data)}`,
+                   { type: 'success', title: 'Đã phân công kỹ thuật viên' });
+        await loadStaffData();
+        await loadKPIs();
       } catch (err) {
-        alert(err.message);
+        showNotice(err.message, { type: 'error', title: 'Không phân công được' });
       } finally {
         button.disabled = false;
         button.innerText = buttonLabel;
@@ -653,7 +660,7 @@
     async function submitVerification(action, btnEl) {
       const notes = document.getElementById('verifyNotes').value.trim();
       if (action === 'REJECT' && !notes) {
-        alert('Vui lòng nhập lý do từ chối theo chính sách bảo hành.');
+        showNotice('Vui lòng nhập lý do từ chối theo chính sách bảo hành trước khi xác nhận.', { type: 'warning', title: 'Thiếu lý do từ chối' });
         return;
       }
 
@@ -670,16 +677,19 @@
           body: JSON.stringify({ action: action, notes: notes || 'Hồ sơ hợp lệ theo quy định hãng' })
         });
         const data = await res.json();
-        if (res.ok) {
-          alert(`Đã cập nhật kết quả xác minh: ${data.status}`);
-          closeVerifyModal();
-          loadStaffData();
-          loadKPIs();
-        } else {
-          alert(data.detail || 'Lỗi xác minh');
-        }
+        const code = document.getElementById('verifyReqCode').innerText;
+        closeVerifyModal();
+        const results = {
+          'Xác minh': ['Hồ sơ hợp lệ', `Hồ sơ phiếu **${code}** hợp lệ. Bước tiếp theo: phân công kỹ thuật viên.`, 'success'],
+          'Chờ bổ sung': ['Đã yêu cầu bổ sung', `Đã yêu cầu khách bổ sung thông tin cho phiếu **${code}**.`, 'info'],
+          'Từ chối bảo hành': ['Đã từ chối bảo hành', `Phiếu **${code}** đã được ghi nhận từ chối bảo hành kèm lý do.`, 'info'],
+        };
+        const [title, message, type] = results[data.status] || ['Đã cập nhật', `Phiếu **${code}**: ${data.status}.`, 'success'];
+        showNotice(message + emailLine(data), { type, title });
+        loadStaffData();
+        loadKPIs();
       } catch (err) {
-        alert(err.message);
+        showNotice(err.message, { type: 'error', title: 'Không cập nhật được kết quả xác minh' });
       } finally {
         if (btnEl) {
           btnEl.innerText = origText;
@@ -716,20 +726,18 @@
           })
         });
         const data = await res.json();
-        if (res.ok) {
-          alert('Đã ghi nhận hoàn thành ca bảo hành. Khách có thể theo dõi kết quả trong tài khoản.');
-          closeCompleteModal();
-          loadStaffData();
-          if (staffSession.role === 'TECHNICIAN') {
-            loadTechPersonalKPI();
-          } else {
-            loadKPIs();
-          }
+        const code = document.getElementById('completeReqCode').innerText;
+        closeCompleteModal();
+        showNotice(`Phiếu **${code}** đã hoàn tất với kết luận “${document.getElementById('completeConclusion').selectedOptions[0].text}”. Khách hàng có thể xem kết quả trong tài khoản.${emailLine(data)}`,
+                   { type: 'success', title: 'Đã báo hoàn thành' });
+        loadStaffData();
+        if (staffSession.role === 'TECHNICIAN') {
+          loadTechPersonalKPI();
         } else {
-          alert(data.detail || 'Lỗi hoàn tất');
+          loadKPIs();
         }
       } catch (err) {
-        alert(err.message);
+        showNotice(err.message, { type: 'error', title: 'Không báo hoàn thành được' });
       }
     }
 

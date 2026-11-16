@@ -233,7 +233,7 @@ function openWarrantyModal(soldItemId) {
   const product = AppState.products.find(p => p.id === soldItemId);
   if (!product) return;
   if (product.is_expired) {
-    alert('Sản phẩm đã hết hạn bảo hành, không thể tạo phiếu mới.');
+    showNotice('Sản phẩm này đã hết hạn bảo hành nên không thể tạo yêu cầu mới. Vui lòng gọi tổng đài **1800 64 64 92** để được hỗ trợ.', { type: 'warning', title: 'Sản phẩm đã hết hạn bảo hành' });
     return;
   }
 
@@ -258,7 +258,7 @@ async function submitWarrantyForm(e) {
   const address = document.getElementById('modalSupportAddress').value;
 
   if (!description.trim()) {
-    alert('Vui lòng mô tả chi tiết hư hỏng.');
+    showNotice('Vui lòng mô tả chi tiết hư hỏng của thiết bị.', { type: 'warning', title: 'Thiếu thông tin' });
     return;
   }
 
@@ -279,16 +279,16 @@ async function submitWarrantyForm(e) {
     });
     const data = await res.json();
     if (!res.ok) {
-      alert(data.detail || 'Có lỗi xảy ra khi gửi yêu cầu.');
+      showNotice(data.detail || 'Có lỗi xảy ra khi gửi yêu cầu.', { type: 'error', title: 'Không gửi được yêu cầu' });
       return;
     }
 
     closeWarrantyModal();
-    alert(`🎉 ${data.message}\nMã yêu cầu: ${data.request_code}\nEmail thông báo đã được gửi cho quý khách.`);
+    showNotice(`Mã yêu cầu của bạn: **${data.request_code}**. CSKH sẽ xác minh và liên hệ lại trong giờ làm việc.${data.email_notified ? ' Khách hàng sẽ nhận được email thông báo.' : ''}`, { type: 'success', title: 'Gửi yêu cầu thành công' });
     loadCustomerData();
     switchCustomerTab('requests');
   } catch (err) {
-    alert('Lỗi kết nối máy chủ: ' + err.message);
+    showNotice(err.message, { type: 'error', title: 'Không gửi được yêu cầu' });
   }
 }
 
@@ -307,7 +307,7 @@ function openChatWithProduct(soldItemId) {
   const product = AppState.products.find(p => p.id === soldItemId);
   if (!product) return;
   if (product.is_expired) {
-    alert('Sản phẩm đã hết hạn bảo hành, không hỗ trợ chat tư vấn.');
+    showNotice('Sản phẩm này đã hết hạn bảo hành nên không hỗ trợ tư vấn qua chat. Vui lòng gọi tổng đài **1800 64 64 92**.', { type: 'warning', title: 'Sản phẩm đã hết hạn bảo hành' });
     return;
   }
 
@@ -463,11 +463,11 @@ async function markRepeatCall(requestId) {
   try {
     const res = await apiFetch(`/api/v1/staff/requests/${requestId}/repeat-call`, { method: 'POST' });
     const data = await res.json();
-    alert(`Đã ghi nhận cuộc gọi hỏi tiến độ! Tổng số cuộc gọi lặp lại: ${data.repeat_call_count}`);
+    showNotice(`Đã ghi nhận cuộc gọi hỏi tiến độ. Tổng số lần khách gọi lại: **${data.repeat_call_count}**.`, { type: 'success', title: 'Đã ghi nhận cuộc gọi' });
     loadStaffRequests();
     loadKPIStats();
   } catch (err) {
-    alert('Lỗi: ' + err.message);
+    showNotice(err.message, { type: 'error' });
   }
 }
 
@@ -479,12 +479,12 @@ async function updateStatus(requestId, newStatus, notes = '') {
       body: JSON.stringify({ new_status: newStatus, notes: notes })
     });
     if (res.ok) {
-      alert(`Đã cập nhật trạng thái: ${newStatus}`);
+      showNotice(`Phiếu đã chuyển sang trạng thái “${newStatus}”.`, { type: 'success', title: 'Đã cập nhật phiếu' });
       loadStaffRequests();
       loadKPIStats();
     }
   } catch (err) {
-    alert('Lỗi cập nhật: ' + err.message);
+    showNotice(err.message, { type: 'error', title: 'Không cập nhật được phiếu' });
   }
 }
 
@@ -535,7 +535,7 @@ async function submitPhoneReception(e) {
   const address = document.getElementById('phoneRecAddress').value.trim();
 
   if (!phone || !desc) {
-    alert('Vui lòng điền đầy đủ SĐT và mô tả lỗi.');
+    showNotice('Vui lòng nhập số điện thoại khách hàng và mô tả lỗi.', { type: 'warning', title: 'Thiếu thông tin' });
     return;
   }
 
@@ -558,12 +558,12 @@ async function submitPhoneReception(e) {
     const data = await res.json();
     if (res.ok) {
       closePhoneReceptionModal();
-      alert(`Đã tạo thành công phiếu ${data.request_code} cho khách ${phone} qua kênh Điện thoại!`);
+      showNotice(`Đã tạo phiếu **${data.request_code}** cho khách ${phone} qua kênh Điện thoại.${data.email_notified ? ' Khách hàng sẽ nhận được email thông báo.' : ''}`, { type: 'success', title: 'Tạo yêu cầu thành công' });
       loadStaffRequests();
       loadKPIStats();
     }
   } catch (err) {
-    alert('Lỗi: ' + err.message);
+    showNotice(err.message, { type: 'error' });
   }
 }
 
@@ -616,11 +616,11 @@ async function submitAssignForm(e) {
     });
     if (res.ok) {
       closeAssignModal();
-      alert('Phân công kỹ thuật viên thành công! Email thông báo đã gửi cho khách.');
+      showNotice('Đã phân công kỹ thuật viên. Đang chờ kỹ thuật viên nhận việc.', { type: 'success', title: 'Đã phân công' });
       loadStaffRequests();
     }
   } catch (err) {
-    alert('Lỗi: ' + err.message);
+    showNotice(err.message, { type: 'error' });
   }
 }
 
@@ -651,7 +651,7 @@ async function submitVerify(decision) {
   } else if (decision === 'REJECT') {
     newStatus = 'Từ chối bảo hành';
     if (!note) {
-      alert('Bắt buộc phải ghi lý do từ chối bảo hành theo quy định!');
+      showNotice('Vui lòng nhập lý do từ chối theo chính sách bảo hành trước khi xác nhận.', { type: 'warning', title: 'Thiếu lý do từ chối' });
       return;
     }
   }
@@ -664,11 +664,11 @@ async function submitVerify(decision) {
     });
     if (res.ok) {
       closeVerifyModal();
-      alert(`Đã cập nhật kết quả xác minh: ${newStatus}`);
+      showNotice(`Kết quả xác minh: “${newStatus}”.`, { type: 'success', title: 'Đã cập nhật xác minh' });
       loadStaffRequests();
     }
   } catch (err) {
-    alert('Lỗi: ' + err.message);
+    showNotice(err.message, { type: 'error' });
   }
 }
 
@@ -706,12 +706,12 @@ async function submitCompleteRepair(e) {
     });
     if (res.ok) {
       closeCompleteRepairModal();
-      alert('Đã cập nhật hoàn tất ca bảo hành! Email thông báo kết quả đã gửi cho khách.');
+      showNotice('Ca bảo hành đã hoàn tất. Khách hàng có thể xem kết quả trong tài khoản.', { type: 'success', title: 'Đã báo hoàn thành' });
       loadStaffRequests();
       loadKPIStats();
     }
   } catch (err) {
-    alert('Lỗi: ' + err.message);
+    showNotice(err.message, { type: 'error' });
   }
 }
 
